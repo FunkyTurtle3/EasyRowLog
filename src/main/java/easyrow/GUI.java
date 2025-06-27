@@ -63,7 +63,7 @@ public class GUI extends Application {
         stage.setAlwaysOnTop(true);
         stage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
 
-        weatherImgView = new ImageView(Resource.getTexture("/UI/drizzle_symbol.png"));
+        weatherImgView = new ImageView(getCurrentWeatherSymbol());
         weatherImgView.setFitHeight(width / 40);
         weatherImgView.setPreserveRatio(true);
         weatherImgView.setEffect(new DropShadow(width / 200, 0, 0, Color.web("#FFFFFF", 0.25)));
@@ -128,7 +128,7 @@ public class GUI extends Application {
         tempPane.setAlignment(Pos.CENTER);
 
         ImageView compassImgView = getSimpleIconImgView("/UI/compass_symbol.png");
-        compassImgView.setRotate(Objects.requireNonNull(getWeatherJson("Berlin")).getJSONObject("wind").getInt("deg"));
+        compassImgView.setRotate(Objects.requireNonNull(getWeatherJson("Berlin")).getJSONObject("wind").getInt("deg") + 180);
 
         HBox symbolPane = new HBox(new StackPane(getInfoCircle(false), weatherSymbol), new StackPane(offCircle, getIconBox("/UI/shutdown_symbol.png", -1)), new StackPane(getInfoCircle(false), getIconBox(compassImgView, -1)), new StackPane(getInfoCircle(false), getIconBox("/UI/compass_symbol.png", -1)));
         symbolPane.setAlignment(Pos.CENTER);
@@ -169,12 +169,14 @@ public class GUI extends Application {
 
         Timeline weatherCycle = new Timeline(new KeyFrame(Duration.seconds(60), e -> {
             tempLabel.setText(getTemperature("Berlin"));
-            weatherImgView.setImage(Resource.getTexture("/UI/" + getWeather("Berlin").toLowerCase() + "_symbol.png"));
+            weatherImgView.setImage(getCurrentWeatherSymbol());
+
+
             sunTranslate.setToY(getCurrentSunPos() - height / 5);
             sunTranslate.play();
 
             RotateTransition compassRotate = new RotateTransition(Duration.seconds(2) , compassImgView);
-            compassRotate.setToAngle(Objects.requireNonNull(getWeatherJson("Berlin")).getJSONObject("wind").getInt("deg"));
+            compassRotate.setToAngle(Objects.requireNonNull(getWeatherJson("Berlin")).getJSONObject("wind").getInt("deg") + 180);
             compassRotate.play();
         }));
         weatherCycle.setCycleCount(Animation.INDEFINITE);
@@ -184,6 +186,16 @@ public class GUI extends Application {
         stage.setScene(scene);
         stage.setFullScreen(true);
         stage.show();
+    }
+
+    public Image getCurrentWeatherSymbol() {
+        if(!getWeather("Berlin").equalsIgnoreCase("clear")) {
+            return Resource.getTexture("/UI/" + getWeather("Berlin").toLowerCase() + "_symbol.png");
+        } else if (getCurrentSunProgress() == -1) {
+            return Resource.getTexture("/UI/moon_symbol.png");
+        } else {
+            return Resource.getTexture("/UI/sun_symbol.png");
+        }
     }
 
     public Rectangle getInfoRectangle() {
