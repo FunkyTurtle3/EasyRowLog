@@ -30,11 +30,6 @@
             <artifactId>json</artifactId>
             <version>20240303</version>
         </dependency>
-        <dependency>
-            <groupId>com.luckycatlabs</groupId>
-            <artifactId>SunriseSunsetCalculator</artifactId>
-            <version>1.2</version>
-        </dependency>
     </dependencies>
 
     <build>

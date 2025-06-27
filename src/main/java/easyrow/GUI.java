@@ -15,7 +15,6 @@ import javafx.scene.paint.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.shape.Shape;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -49,7 +48,7 @@ public class GUI extends Application {
     }
 
     public GUI() {
-        // Muss öffentlich und ohne Parameter sein
+
     }
 
 
@@ -70,7 +69,7 @@ public class GUI extends Application {
         weatherImgView.setEffect(new DropShadow(width / 200, 0, 0, Color.web("#FFFFFF", 0.25)));
 
         BorderPane mainPane = new BorderPane();
-        // Load Icon (optional)
+
         try {
             stage.getIcons().add(Resource.getTexture("/UI/logo_500x500.png"));
         } catch (Exception e) {
@@ -82,28 +81,33 @@ public class GUI extends Application {
         leftPanel.setPrefWidth(width / 4);
 
         // --- Center Panel ---
-        // Hintergrund mit Farbverlauf
-        Stop[] stops = new Stop[] {
-                new Stop(0, Color.web("#C7FFF4")),
-                new Stop(1, Color.web("#0096C7"))
-        };
-        RadialGradient backgroundGradient = new RadialGradient(0, 0, 0.5, 1, 1,  true,
-                CycleMethod.NO_CYCLE, stops);
+
+        RadialGradient clearSkyGradient = new RadialGradient(0, 0, 0.5, 1, 1,  true,
+                CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("C7FFF4")), new Stop(1, Color.web("0096C7"))));
+
+        RadialGradient sunsetSunriseGradient = new RadialGradient(0, 0, 0.5, 1, 1, true, CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("EEAF61")), new Stop(1, Color.web("CE4993"))));
+
         Pane root = new Pane();
-        root.setBackground(new Background(new BackgroundFill(backgroundGradient, CornerRadii.EMPTY, null)));
+
+        Rectangle clearSky = new Rectangle(width / 2, height);
+        clearSky.setFill(clearSkyGradient);
         root.setPrefWidth(width / 2);
 
-        // Sonne (gelber Kreis mit Glow)
-        stops = new Stop[] {
-                new Stop(0, Color.web("#FFF0D7")),
-                new Stop(1, Color.web("#FFDB72"))
-        };
+        Rectangle sunsetSunriseSky = new Rectangle(width / 2, height);
+        sunsetSunriseSky.setFill(sunsetSunriseGradient);
+        sunsetSunriseSky.setOpacity(0.5);
+        root.setPrefWidth(width / 2);
+
         Circle sun = new Circle(width / 20);
         sun.setFill(new RadialGradient(0, 0, 0.5, 0.5, 1,  true,
-                CycleMethod.NO_CYCLE, stops));
+                CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("#FFF0D7")), new Stop(1, Color.web("#FFDB72")))));
         sun.setCenterX(width / 4);
         sun.setCenterY(getCurrentSunPos());
         sun.setEffect(new DropShadow(75, Color.web("#F7B801", 0.75)));
+        TranslateTransition sunTranslate = new TranslateTransition(Duration.seconds(60), sun);
+        sunTranslate.setToY(getCurrentSunPos() - height / 5);
+        sunTranslate.play();
+
 
         Label timeLabel = getInfoLabel(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")));
 
@@ -113,7 +117,7 @@ public class GUI extends Application {
         Label tempLabel = getInfoLabel(getTemperature("Berlin"));
 
         HBox weatherSymbol = new HBox(weatherImgView);
-        weatherSymbol.setPadding(new Insets(0, 0, 0, 0)); // Abstand vom linken Rand
+        weatherSymbol.setPadding(new Insets(0, 0, 0, 0));
         weatherSymbol.setAlignment(Pos.CENTER);
 
         Circle offCircle = getInfoCircle(true);
@@ -130,21 +134,20 @@ public class GUI extends Application {
         symbolPane.setAlignment(Pos.CENTER);
         symbolPane.setSpacing(18 * width / height);
 
-        // Infobox zentriert
+
         VBox infobox = new VBox(height / 30, timePane, tempPane, symbolPane);
-        infobox.setLayoutX((width / 2 - infobox.prefWidth(-1)) / 2); // halb von root-Breite, minus halbe Box-Breite
-        infobox.setLayoutY(height / 2); // beliebig platzieren
+        infobox.setLayoutX((width / 2 - infobox.prefWidth(-1)) / 2);
+        infobox.setLayoutY(height / 2);
         infobox.setAlignment(Pos.CENTER);
 
         Image waveImg = Resource.getTexture("/waves/normal.png");
         ImageView wavesImageView = new ImageView(waveImg);
 
-        // Optional: Größe anpassen
-        wavesImageView.setFitWidth(width / 2);
         wavesImageView.setPreserveRatio(true);
+        wavesImageView.setFitWidth(width / 2);
         wavesImageView.setEffect(new DropShadow(width / 200, 0, -2, Color.web("#FFFFFF", 0.25)));
         wavesImageView.setX(0);
-        wavesImageView.setY(height - waveImg.getHeight());
+        wavesImageView.setY(height - waveImg.getHeight() / 2);
         wavesImageView.setEffect(new DropShadow(width / 200, Color.WHITE));
 
         // --- Right Panel ---
@@ -153,7 +156,7 @@ public class GUI extends Application {
         rightPanel.setPrefWidth(width / 4);
 
         // Alles hinzufügen
-        root.getChildren().addAll(sun, infobox, wavesImageView);
+        root.getChildren().addAll(clearSky, sunsetSunriseSky, sun, infobox, wavesImageView);
 
         // Add Panels to main layout
         mainPane.setLeft(leftPanel);
@@ -164,10 +167,9 @@ public class GUI extends Application {
         clock.setCycleCount(Animation.INDEFINITE);
         clock.play();
 
-        Timeline weatherCycle = new Timeline(new KeyFrame(Duration.seconds(10), e -> {
+        Timeline weatherCycle = new Timeline(new KeyFrame(Duration.seconds(60), e -> {
             tempLabel.setText(getTemperature("Berlin"));
             weatherImgView.setImage(Resource.getTexture("/UI/" + getWeather("Berlin").toLowerCase() + "_symbol.png"));
-            TranslateTransition sunTranslate = new TranslateTransition(Duration.seconds(10), sun);
             sunTranslate.setToY(getCurrentSunPos() - height / 5);
             sunTranslate.play();
 
@@ -281,6 +283,10 @@ public class GUI extends Application {
         return getIconBox(getSimpleIconImgView(path), face);
     }
 
+    public Stop[] getStops(Stop... stops) {
+        return stops;
+    }
+
     public static String getWeather(String city) {
         try {
             return Objects.requireNonNull(getWeatherJson(city)).getJSONArray("weather").getJSONObject(0).getString("main");
@@ -328,22 +334,29 @@ public class GUI extends Application {
         }
     }
 
+public double getCurrentSunProgress() {
+    JSONObject weather = getWeatherJson("Berlin");
+    if (weather == null) {
+        return -1;
+    }
+    long sunrise = weather.getJSONObject("sys").getLong("sunrise");
+    long sunset = weather.getJSONObject("sys").getLong("sunset");
+    long currentTime = ZonedDateTime.now(ZoneId.systemDefault()).toEpochSecond();
+    if (currentTime < sunrise || currentTime > sunset ) {
+        return -1;
+    }
+    return (double)(currentTime - sunrise) / (sunset - sunrise);
+}
 
     public double getCurrentSunPos() {
         double padding = height / 5;
-        JSONObject weather = getWeatherJson("Berlin");
-        if (weather == null) return height;
-
-        long sunrise = weather.getJSONObject("sys").getLong("sunrise");
-        long sunset = weather.getJSONObject("sys").getLong("sunset");
-        long currentTime = ZonedDateTime.now(ZoneId.systemDefault()).toEpochSecond();
-
-        if (currentTime < sunrise || currentTime > sunset) {
-            return height; // Sonne nicht sichtbar
-        }
 
         // Zeitfortschritt von 0 (Sonnenaufgang) bis 1 (Sonnenuntergang)
-        double progress = (double)(currentTime - sunrise) / (sunset - sunrise);
+        double progress = getCurrentSunProgress();
+
+        if (progress == -1) {
+            return height;
+        }
 
         // Winkel von 0 (Sonnenaufgang) bis PI (Sonnenuntergang)
         double angle = progress * Math.PI;
@@ -351,8 +364,6 @@ public class GUI extends Application {
         // Max Höhe: Padding (oben), Min Höhe: height - padding (unten)
         double amplitude = (height - 2 * padding);
         double y = height - (Math.sin(angle) * amplitude + padding);  // y-Koordinate in JavaFX
-
-        System.out.println(y);
 
         return y;
     }
