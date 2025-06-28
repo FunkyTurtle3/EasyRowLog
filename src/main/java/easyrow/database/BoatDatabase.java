@@ -8,11 +8,9 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BoatDatabase {
+public class BoatDatabase extends Database{
 
-    private static final String URL = "jdbc:sqlite:boats.db";
-
-    public static void init() {
+    public void init() {
         try {
             Connection connection = DriverManager.getConnection(URL);
             Statement statement = connection.createStatement();
@@ -33,7 +31,12 @@ public class BoatDatabase {
         }
     }
 
-    public static void saveBoat(Boat boat) {
+    @Override
+    public String getName() {
+        return "boats";
+    }
+
+    public void saveBoat(Boat boat) {
         try (Connection connection = DriverManager.getConnection(URL);
              PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO boats (name, boatType, priority, avgTeamWeight, boatWeight) VALUES (?, ?, ?, ?, ?)")) {
 
@@ -49,7 +52,7 @@ public class BoatDatabase {
         }
     }
 
-    public static List<Boat> getBoats() {
+    public List<Boat> getBoats() {
         List<Boat> boats = new ArrayList<>();
 
         String sql = "SELECT name, boatType, priority, avgTeamWeight, boatWeight FROM boats";
@@ -76,7 +79,7 @@ public class BoatDatabase {
         return boats;
     }
 
-    public static Boat getBoatByName(String name) {
+    public Boat getBoatByName(String name) {
         for(Boat boat : getBoats()) {
             if (boat.name().equalsIgnoreCase(name)) {
                 return boat;

@@ -10,11 +10,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class AthleteDatabase {
+public class AthleteDatabase extends Database{
 
-    private static final String URL = "jdbc:sqlite:athletes.db";
-
-    public static void init() {
+    public AthleteDatabase() {
+        super();
+    }
+    
+    public void init() {
         try {
             Connection connection = DriverManager.getConnection(URL);
             Statement statement = connection.createStatement();
@@ -36,7 +38,18 @@ public class AthleteDatabase {
         }
     }
 
-    public static void saveAthlete(Athlete athlete) {
+    @Override
+    public String getURL() {
+        return URL;
+    }
+
+    @Override
+    public String getName() {
+        String NAME = "athletes";
+        return NAME;
+    }
+
+    public void saveAthlete(Athlete athlete) {
         try (Connection connection = DriverManager.getConnection(URL);
              PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO athletes (firstname, lastname, club, prio, birthdate, licenseNumber) VALUES (?, ?, ?, ?, ?, ?)")) {
 
@@ -54,7 +67,7 @@ public class AthleteDatabase {
         }
     }
 
-    public static List<Athlete> getAthletes() {
+    public List<Athlete> getAthletes() {
         List<Athlete> athletes = new ArrayList<>();
 
         String sql = "SELECT firstname, lastname, club, prio, birthdate, licenseNumber FROM athletes";
@@ -84,7 +97,7 @@ public class AthleteDatabase {
         return athletes;
     }
 
-    public static Athlete getAthleteByName(String name) {
+    public Athlete getAthleteByName(String name) {
         for(Athlete athlete : getAthletes()) {
             if (athlete.getFirstName().equalsIgnoreCase(name.split(" ")[0]) && athlete.getLastName().equalsIgnoreCase(name.split(" ")[1])) {
                 return athlete;
@@ -92,5 +105,4 @@ public class AthleteDatabase {
         }
         return null;
     }
-
 }

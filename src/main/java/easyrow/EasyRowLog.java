@@ -5,36 +5,61 @@ import easyrow.data.Club;
 import easyrow.data.Prio;
 import easyrow.database.AthleteDatabase;
 import easyrow.database.BoatDatabase;
+import org.apache.commons.text.similarity.LevenshteinDistance;
 
 import java.time.LocalDate;
+import java.util.Comparator;
+import java.util.List;
 
 public class EasyRowLog {
 
-    private static final String URL = "jdbc:sqlite:athletes.db";
+    private final BoatDatabase boatDatabase;
+    private final AthleteDatabase athleteDatabase;
 
     public static void main(String[] args) {
-        new EasyRowLog();
+        EasyRowLog log =  new EasyRowLog();
     }
 
     public EasyRowLog() {
-        new GUI();
-        BoatDatabase.init();
-        AthleteDatabase.init();
+        boatDatabase = new BoatDatabase();
+        athleteDatabase = new AthleteDatabase();
     }
 
     public void addBoatToLib(Boat boat) {
-        BoatDatabase.saveBoat(boat);
+        boatDatabase.saveBoat(boat);
     }
 
     public void addBoatToLib(String name, BoatType boatType, Prio priority, double avgTeamWeight, double boatWeight) {
-        BoatDatabase.saveBoat(new Boat(name, boatType, priority, avgTeamWeight, boatWeight));
+        boatDatabase.saveBoat(new Boat(name, boatType, priority, avgTeamWeight, boatWeight));
     }
 
     public void addAthleteToLib(Athlete athlete) {
-        AthleteDatabase.saveAthlete(athlete);
+        athleteDatabase.saveAthlete(athlete);
     }
 
     public void addAthleteToLib(String firstName, String lastName, Club club, Prio prio, LocalDate dateOfBirth, int licenseNumber) {
-        AthleteDatabase.saveAthlete(new Athlete(firstName, lastName, club, prio, dateOfBirth, licenseNumber));
+        athleteDatabase.saveAthlete(new Athlete(firstName, lastName, club, prio, dateOfBirth, licenseNumber));
+    }
+
+    public List<Athlete> getAthletes() {
+        return athleteDatabase.getAthletes();
+    }
+
+    public List<Boat> getBoats() {
+        return boatDatabase.getBoats();
+    }
+
+    public List<Athlete> getAthletesSimOrder(String input) {
+        List<Athlete> athletes = athleteDatabase.getAthletes();
+        LevenshteinDistance ld = new LevenshteinDistance();
+        athletes.sort(Comparator.comparingInt(athlete -> ld.apply(athlete.getFullName().toLowerCase(), input.toLowerCase())));
+        return athletes;
+    }
+
+    public List<Boat> getBoatsSimOrder(String input) {
+        List<Boat> boats = boatDatabase.getBoats();
+        LevenshteinDistance ld = new LevenshteinDistance();
+        boats.sort(Comparator.comparingInt(boat -> ld.apply(boat.name().toLowerCase(), input.toLowerCase())));
+        return boats;
     }
 }
