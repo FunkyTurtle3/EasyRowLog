@@ -6,6 +6,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -39,6 +40,8 @@ public class GUI extends Application {
     private static final Logger log = LoggerFactory.getLogger(GUI.class);
     private EasyRowLog easyRowLog;
     private static final String API_KEY = "2c4efc9c04e72b05668e99873bae5cdb";
+    private double latitude;
+    private double longitude;
     private ImageView weatherImgView;
     private double width;
     private double height;
@@ -48,9 +51,10 @@ public class GUI extends Application {
     }
 
     public GUI() {
-
+        easyRowLog = new EasyRowLog();
+        latitude = getCoordinatesFromIP()[0];
+        longitude = getCoordinatesFromIP()[1];
     }
-
 
     @Override
     public void start(Stage stage) {
@@ -70,43 +74,47 @@ public class GUI extends Application {
 
         BorderPane mainPane = new BorderPane();
 
-        try {
-            stage.getIcons().add(Resource.getTexture("/UI/logo_500x500.png"));
-        } catch (Exception e) {
-            log.error("Icon konnte nicht geladen werden", e);
-        }
+        stage.getIcons().add(Resource.getTexture("/UI/logo_500x500.png"));
 
         // --- Left Panel ---
         VBox leftPanel = new VBox(10);
         leftPanel.setPrefWidth(width / 4);
 
         // --- Center Panel ---
+        Pane centerPane = new Pane();
+        centerPane.setPrefWidth(width / 2);
 
-        RadialGradient clearSkyGradient = new RadialGradient(0, 0, 0.5, 1, 1,  true,
-                CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("C7FFF4")), new Stop(1, Color.web("0096C7"))));
-
-        RadialGradient sunsetSunriseGradient = new RadialGradient(0, 0, 0.5, 1, 1, true, CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("EEAF61")), new Stop(1, Color.web("CE4993"))));
-
-        Pane root = new Pane();
+        RadialGradient clearSkyGradient = new RadialGradient(0, 0, 0.5, 1, 1,  true, CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("C7FFF4")), new Stop(1, Color.web("0096C7"))));
+        RadialGradient sunsetSunriseGradient = new RadialGradient(0, 0, 0.5, 1, 1, true, CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("FCBF49")), new Stop(1, Color.web("D62828"))));
+        RadialGradient nightSkyGradient = new RadialGradient(0, 0, 0.5, 1, 1, true, CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("03045E")), new Stop(1, Color.web("0D1B2A"))));
 
         Rectangle clearSky = new Rectangle(width / 2, height);
         clearSky.setFill(clearSkyGradient);
-        root.setPrefWidth(width / 2);
 
         Rectangle sunsetSunriseSky = new Rectangle(width / 2, height);
         sunsetSunriseSky.setFill(sunsetSunriseGradient);
-        sunsetSunriseSky.setOpacity(0.5);
-        root.setPrefWidth(width / 2);
+        sunsetSunriseSky.setOpacity(0);
 
-        Circle sun = new Circle(width / 20);
-        sun.setFill(new RadialGradient(0, 0, 0.5, 0.5, 1,  true,
+        if(getCurrentSunProgress() > 0.8 ) {
+            sunsetSunriseSky.setOpacity((getCurrentSunProgress() - 0.8) * 5);
+        }
+
+        Rectangle nightSky = new Rectangle(width / 2, height);
+        nightSky.setFill(nightSkyGradient);
+        nightSky.setOpacity(0);
+        if (getCurrentSunProgress() == -1 && nightSky.getOpacity() == 0) {
+            FadeTransition nightAnimation = new FadeTransition(Duration.minutes(4), nightSky);
+            nightAnimation.setToValue(1);
+            nightAnimation.play();
+        }
+
+        Circle sunDisplay = new Circle(width / 20);
+        sunDisplay.setFill(new RadialGradient(0, 0, 0.5, 0.5, 1,  true,
                 CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("#FFF0D7")), new Stop(1, Color.web("#FFDB72")))));
-        sun.setCenterX(width / 4);
-        sun.setCenterY(getCurrentSunPos());
-        sun.setEffect(new DropShadow(75, Color.web("#F7B801", 0.75)));
-        TranslateTransition sunTranslate = new TranslateTransition(Duration.seconds(60), sun);
-        sunTranslate.setToY(getCurrentSunPos() - height / 5);
-        sunTranslate.play();
+        sunDisplay.setCenterX(width / 4);
+        sunDisplay.setTranslateY(getCurrentSunPos() + sunDisplay.getRadius());
+        sunDisplay.setEffect(new DropShadow(75, Color.web("#F7B801", 0.75)));
+        TranslateTransition sunTranslate = new TranslateTransition(Duration.seconds(60), sunDisplay);
 
 
         Label timeLabel = getInfoLabel(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")));
@@ -127,10 +135,17 @@ public class GUI extends Application {
         tempPane.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
         tempPane.setAlignment(Pos.CENTER);
 
-        ImageView compassImgView = getSimpleIconImgView("/UI/compass_symbol.png");
-        compassImgView.setRotate(Objects.requireNonNull(getWeatherJson("Berlin")).getJSONObject("wind").getInt("deg") + 180);
+        ImageView windDirectionImgView = getSimpleIconImgView("/UI/compass_symbol.png");
+        windDirectionImgView.setRotate(Objects.requireNonNull(getWeatherJson("Berlin")).getJSONObject("wind").getInt("deg") + 180);
 
-        HBox symbolPane = new HBox(new StackPane(getInfoCircle(false), weatherSymbol), new StackPane(offCircle, getIconBox("/UI/shutdown_symbol.png", -1)), new StackPane(getInfoCircle(false), getIconBox(compassImgView, -1)), new StackPane(getInfoCircle(false), getIconBox("/UI/compass_symbol.png", -1)));
+
+        Label windSpeedLabel = new Label(((int) getWeatherJson().getJSONObject("wind").getDouble("speed")) + "");
+        windSpeedLabel.setFont(Resource.getFont("/anta_regular.otf", (int) (height / 30)));
+        windSpeedLabel.setTextFill(Color.WHITE);
+        windSpeedLabel.setTooltip(new Tooltip("Windgeschwindigkeit: " + windSpeedLabel.getText() + "km/h"));
+        windSpeedLabel.setAlignment(Pos.CENTER);
+
+        HBox symbolPane = new HBox(new StackPane(getInfoCircle(false), weatherSymbol), new StackPane(getInfoCircle(false), windSpeedLabel), new StackPane(getInfoCircle(false), windDirectionImgView), new StackPane(offCircle, getIconBox("/UI/shutdown_symbol.png", -1)));
         symbolPane.setAlignment(Pos.CENTER);
         symbolPane.setSpacing(18 * width / height);
 
@@ -147,8 +162,24 @@ public class GUI extends Application {
         wavesImageView.setFitWidth(width / 2);
         wavesImageView.setEffect(new DropShadow(width / 200, 0, -2, Color.web("#FFFFFF", 0.25)));
         wavesImageView.setX(0);
+        wavesImageView.setOpacity(0);
         wavesImageView.setY(height - waveImg.getHeight() / 2);
         wavesImageView.setEffect(new DropShadow(width / 200, Color.WHITE));
+
+        Image leftSweep = Resource.getTexture("/oars/sweep_left.png");
+        ImageView sweepLeftImgView = new ImageView(leftSweep);
+        sweepLeftImgView.setPreserveRatio(true);
+        sweepLeftImgView.setFitHeight(height * 1.03);
+        sweepLeftImgView.setX(-1 * height / 18);
+        sweepLeftImgView.setY(height * -0.03);
+
+        Image rightSweep = Resource.getTexture("/oars/sweep_left.png");
+        ImageView sweepRightImgView = new ImageView(rightSweep);
+        sweepRightImgView.setScaleX(-1);
+        sweepRightImgView.setPreserveRatio(true);
+        sweepRightImgView.setFitHeight(height * 1.03);
+        sweepRightImgView.setTranslateX(width / 2 - (rightSweep.getWidth() - height / 18) / 2 + 1);
+        sweepRightImgView.setY(height * -0.03);
 
         // --- Right Panel ---
         StackPane rightPanel = new StackPane();
@@ -156,12 +187,12 @@ public class GUI extends Application {
         rightPanel.setPrefWidth(width / 4);
 
         // Alles hinzufügen
-        root.getChildren().addAll(clearSky, sunsetSunriseSky, sun, infobox, wavesImageView);
+        centerPane.getChildren().addAll(clearSky, sunsetSunriseSky, nightSky, sunDisplay, infobox, wavesImageView, sweepLeftImgView, sweepRightImgView);
 
         // Add Panels to main layout
         mainPane.setLeft(leftPanel);
-        mainPane.setCenter(root);
         mainPane.setRight(rightPanel);
+        mainPane.setCenter(centerPane);
 
         Timeline clock = new Timeline(new KeyFrame(Duration.seconds(1), e -> timeLabel.setText(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")))));
         clock.setCycleCount(Animation.INDEFINITE);
@@ -171,11 +202,32 @@ public class GUI extends Application {
             tempLabel.setText(getTemperature("Berlin"));
             weatherImgView.setImage(getCurrentWeatherSymbol());
 
+                sunTranslate.setToY(getCurrentSunPos() + sunDisplay.getRadius());
+                sunTranslate.play();
 
-            sunTranslate.setToY(getCurrentSunPos() - height / 5);
-            sunTranslate.play();
 
-            RotateTransition compassRotate = new RotateTransition(Duration.seconds(2) , compassImgView);
+
+                sunTranslate.setToY(getCurrentSunPos() + sunDisplay.getRadius());
+                sunTranslate.play();
+
+            if(getCurrentSunProgress() > 0.8) {
+                FadeTransition sunsetSunriseAnimation = new FadeTransition(Duration.seconds(60), sunsetSunriseSky);
+                sunsetSunriseAnimation.setToValue((getCurrentSunProgress() - 0.8) * 5);
+                sunsetSunriseAnimation.play();
+            } else if(getCurrentSunProgress() < 0.2 && getCurrentSunProgress() > 0) {
+                FadeTransition sunsetSunriseAnimation = new FadeTransition(Duration.seconds(60), sunsetSunriseSky);
+                sunsetSunriseAnimation.setToValue(getCurrentSunProgress() * 5);
+                sunsetSunriseAnimation.play();
+            }
+
+
+            if (getCurrentSunProgress() == -1 && nightSky.getOpacity() == 0) {
+                FadeTransition nightAnimation = new FadeTransition(Duration.minutes(4), nightSky);
+                nightAnimation.setToValue(1);
+                nightAnimation.play();
+            }
+
+            RotateTransition compassRotate = new RotateTransition(Duration.seconds(2) , windDirectionImgView);
             compassRotate.setToAngle(Objects.requireNonNull(getWeatherJson("Berlin")).getJSONObject("wind").getInt("deg") + 180);
             compassRotate.play();
         }));
@@ -199,15 +251,19 @@ public class GUI extends Application {
     }
 
     public Rectangle getInfoRectangle() {
-        Rectangle rectangle = new Rectangle(width / 5, height / 15);
-        rectangle.prefWidth(width / 5);
-        rectangle.prefHeight(height / 15);
-        rectangle.setArcWidth(width / 25);
-        rectangle.setArcHeight(height / 7.5);
+        return getInfoRectangle(width / 5, height / 15);
+    }
+
+    public Rectangle getInfoRectangle(double width, double height) {
+        Rectangle rectangle = new Rectangle(width, height);
+        rectangle.prefWidth(this.width / 5);
+        rectangle.prefHeight(this.height / 15);
+        rectangle.setArcWidth(this.width / 25);
+        rectangle.setArcHeight(this.height / 7.5);
         rectangle.setFill(Color.web("#FFFFFF", 0.2));
         rectangle.setStroke(Color.web("#FFFFFF", 0.5));
         rectangle.setStrokeWidth(2);
-        rectangle.setEffect(new DropShadow(width / 200, 2, 2, Color.web("#FFFFFF", 1)));
+        rectangle.setEffect(new DropShadow(this.width / 200, 2, 2, Color.web("#FFFFFF", 1)));
         return rectangle;
     }
 
@@ -221,7 +277,6 @@ public class GUI extends Application {
         if (hoverEffect) {
             circle.setOnMouseEntered(mouseEvent -> {
                 FillTransition animation = new FillTransition(Duration.millis(300), circle, (Color) circle.getFill(), Color.web("#8E8E8E", 0.2));
-                System.out.println("Funkt");
                 animation.play();
             });
             circle.setOnMouseExited(mouseEvent -> {
@@ -299,7 +354,7 @@ public class GUI extends Application {
         return stops;
     }
 
-    public static String getWeather(String city) {
+    public String getWeather(String city) {
         try {
             return Objects.requireNonNull(getWeatherJson(city)).getJSONArray("weather").getJSONObject(0).getString("main");
 
@@ -310,7 +365,7 @@ public class GUI extends Application {
         }
     }
 
-    public static String getTemperature(String city) {
+    public String getTemperature(String city) {
         try {
             return Math.round(Objects.requireNonNull(getWeatherJson(city)).getJSONObject("main").getDouble("temp")) + "°C";
         } catch (Exception e) {
@@ -319,11 +374,18 @@ public class GUI extends Application {
         }
     }
 
-    private static JSONObject getWeatherJson(String city) {
-        try {
-            String urlStr = "https://api.openweathermap.org/data/2.5/weather?q=" + city +
-                    "&units=metric&appid=" + API_KEY;
+    private JSONObject getWeatherJson(String city) {
+        return getWeatherJsonByURL("https://api.openweathermap.org/data/2.5/weather?q=" + city + ",de&units=metric&appid=" + API_KEY);
+    }
 
+    private JSONObject getWeatherJson() {
+        return getWeatherJsonByURL("https://api.openweathermap.org/data/2.5/weather?lat=" + latitude +
+                "&lon=" + longitude +
+                "&units=metric&appid=" + API_KEY);
+    }
+
+    private JSONObject getWeatherJsonByURL(String urlStr) {
+        try {
             URL url = new URL(urlStr);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
@@ -346,19 +408,19 @@ public class GUI extends Application {
         }
     }
 
-public double getCurrentSunProgress() {
-    JSONObject weather = getWeatherJson("Berlin");
-    if (weather == null) {
-        return -1;
+    public double getCurrentSunProgress() {
+        JSONObject weather = getWeatherJson("Berlin");
+        if (weather == null) {
+            return -1;
+        }
+        long sunrise = weather.getJSONObject("sys").getLong("sunrise");
+        long sunset = weather.getJSONObject("sys").getLong("sunset");
+        long currentTime = ZonedDateTime.now(ZoneId.systemDefault()).toEpochSecond();
+        if (currentTime < sunrise || currentTime > sunset ) {
+            return -1;
+        }
+        return (double)(currentTime - sunrise) / (sunset - sunrise);
     }
-    long sunrise = weather.getJSONObject("sys").getLong("sunrise");
-    long sunset = weather.getJSONObject("sys").getLong("sunset");
-    long currentTime = ZonedDateTime.now(ZoneId.systemDefault()).toEpochSecond();
-    if (currentTime < sunrise || currentTime > sunset ) {
-        return -1;
-    }
-    return (double)(currentTime - sunrise) / (sunset - sunrise);
-}
 
     public double getCurrentSunPos() {
         double padding = height / 5;
@@ -374,9 +436,39 @@ public double getCurrentSunProgress() {
         double angle = progress * Math.PI;
 
         // Max Höhe: Padding (oben), Min Höhe: height - padding (unten)
-        double amplitude = (height - 2 * padding);
-        double y = height - (Math.sin(angle) * amplitude + padding);  // y-Koordinate in JavaFX
+        double amplitude = (height - padding);
+        // y-Koordinate in JavaFX
 
-        return y;
+        return height - (Math.sin(angle) * amplitude);
     }
+
+    public static double[] getCoordinatesFromIP() {
+        try {
+            URL url = new URL("http://ip-api.com/json/");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            StringBuilder result = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                result.append(line);
+            }
+            reader.close();
+
+            JSONObject json = new JSONObject(result.toString());
+            return new double[] {
+                    json.getDouble("lat"),
+                    json.getDouble("lon")
+            };
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new double[] {
+                    0,
+                    0
+            };
+        }
+    }
+
 }
