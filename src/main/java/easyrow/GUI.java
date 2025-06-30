@@ -4,6 +4,7 @@ import javafx.animation.*;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
@@ -31,6 +32,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
+import java.util.Stack;
 
 import org.json.JSONObject;
 
@@ -77,9 +79,10 @@ public class GUI extends Application {
         stage.getIcons().add(Resource.getTexture("/UI/logo_500x500.png"));
 
         // --- Left Panel ---
-        VBox leftPanel = new VBox(10);
-        leftPanel.setBackground(new Background(new BackgroundFill(Color.web("#F5DFBB"), CornerRadii.EMPTY, Insets.EMPTY)));
+        Pane leftPanel = new StackPane();
         leftPanel.setPrefWidth(width / 4);
+
+        StackPane testDropdown = getDropdown(getInfoCircle(false), getInfoCircle(false), getInfoCircle(false));
 
         // --- Center Panel ---
         Pane centerPane = new Pane();
@@ -89,10 +92,10 @@ public class GUI extends Application {
         RadialGradient sunsetSunriseGradient = new RadialGradient(0, 0, 0.5, 1, 1, true, CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("FCBF49")), new Stop(1, Color.web("D62828"))));
         RadialGradient nightSkyGradient = new RadialGradient(0, 0, 0.5, 1, 1, true, CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("03045E")), new Stop(1, Color.web("0D1B2A"))));
 
-        Rectangle clearSky = new Rectangle(width / 2, height);
+        Rectangle clearSky = new Rectangle(width, height);
         clearSky.setFill(clearSkyGradient);
 
-        Rectangle sunsetSunriseSky = new Rectangle(width / 2, height);
+        Rectangle sunsetSunriseSky = new Rectangle(width, height);
         sunsetSunriseSky.setFill(sunsetSunriseGradient);
         sunsetSunriseSky.setOpacity(0);
 
@@ -100,7 +103,7 @@ public class GUI extends Application {
             sunsetSunriseSky.setOpacity((getCurrentSunProgress() - 0.8) * 5);
         }
 
-        Rectangle nightSky = new Rectangle(width / 2, height);
+        Rectangle nightSky = new Rectangle(width, height);
         nightSky.setFill(nightSkyGradient);
         nightSky.setOpacity(0);
         if (getCurrentSunProgress() == -1) {
@@ -164,14 +167,14 @@ public class GUI extends Application {
         wavesImageView.setY(height - waveImg.getHeight() / 2);
         wavesImageView.setEffect(new DropShadow(width / 200, Color.WHITE));
 
-        Image leftSweep = Resource.getTexture("/oars/sweep_dark_blue.png");
+        Image leftSweep = Resource.getTexture("/oars/sweep_left.png");
         ImageView sweepLeftImgView = new ImageView(leftSweep);
         sweepLeftImgView.setPreserveRatio(true);
         sweepLeftImgView.setFitHeight(height * 1.03);
         sweepLeftImgView.setX(-1 * height / 18);
         sweepLeftImgView.setY(height * -0.03);
 
-        Image rightSweep = Resource.getTexture("/oars/sweep_dark_blue.png");
+        Image rightSweep = Resource.getTexture("/oars/sweep_left.png");
         ImageView sweepRightImgView = new ImageView(rightSweep);
         sweepRightImgView.setScaleX(-1);
         sweepRightImgView.setPreserveRatio(true);
@@ -181,12 +184,24 @@ public class GUI extends Application {
 
         // --- Right Panel ---
         StackPane rightPanel = new StackPane();
-        rightPanel.setBackground(new Background(new BackgroundFill(Color.web("#f4d58d"), CornerRadii.EMPTY, Insets.EMPTY)));
         rightPanel.setPrefWidth(width / 4);
-        rightPanel.setEffect(new DropShadow(10, Color.web("#F5DFBB")));
+
 
         // Alles hinzufügen
-        centerPane.getChildren().addAll(clearSky, sunsetSunriseSky, nightSky, sunDisplay, infobox, wavesImageView);
+        centerPane.getChildren().addAll(sunDisplay, infobox, wavesImageView);
+
+        Rectangle leftSidebar = getInfoRectangle((width / 4) - (width / 30), height - width / 30);
+        leftPanel.setPadding(new Insets(width / 60, width / 60, width / 60, width / 60));
+
+        leftPanel.getChildren().addAll(leftSidebar, testDropdown);
+
+        Rectangle rightSidebar = getInfoRectangle((width / 4) - (width / 30), height - width / 30);
+        rightPanel.setPadding(new Insets(width / 60, width / 60, width / 60, width / 60));
+
+        rightPanel.getChildren().add(rightSidebar);
+
+
+        mainPane.getChildren().addAll(clearSky, sunsetSunriseSky, nightSky);
 
         // Add Panels to main layout
         mainPane.setLeft(leftPanel);
@@ -255,10 +270,10 @@ public class GUI extends Application {
 
     public Rectangle getInfoRectangle(double width, double height) {
         Rectangle rectangle = new Rectangle(width, height);
-        rectangle.prefWidth(this.width / 5);
-        rectangle.prefHeight(this.height / 15);
-        rectangle.setArcWidth(this.width / 25);
-        rectangle.setArcHeight(this.height / 7.5);
+        rectangle.prefWidth(width);
+        rectangle.prefHeight(height);
+        rectangle.setArcWidth(this.height / 15);
+        rectangle.setArcHeight(this.height / 15);
         rectangle.setFill(Color.web("#FFFFFF", 0.2));
         rectangle.setStroke(Color.web("#FFFFFF", 0.5));
         rectangle.setStrokeWidth(2);
@@ -343,6 +358,40 @@ public class GUI extends Application {
             }
         }
         return iconSymbolBox;
+    }
+
+    public StackPane getDropdown(Node... nodes) {
+        Node first = nodes[0];
+        for (int i = 1; i < nodes.length; i++) {
+            nodes[i].setOpacity(0);
+        }
+        FadeTransition fadeTransition = new FadeTransition(Duration.millis(300));
+        TranslateTransition translateTransition = new TranslateTransition(Duration.millis(300));
+
+        first.setOnMouseEntered(mouseEvent -> {
+            for (int i = 0; i < nodes.length; i++) {
+                System.out.println("funkt eigentlich");
+                translateTransition.setToY(first.getBoundsInLocal().getHeight() * i);
+                fadeTransition.setToValue(1);
+                ParallelTransition transition = new ParallelTransition(fadeTransition, translateTransition);
+                transition.setNode(nodes[i]);
+                transition.play();
+            }
+        });
+        first.setOnMouseExited(mouseEvent -> {
+            for (Node node : nodes) {
+                translateTransition.setToY(0);
+                fadeTransition.setToValue(0);
+                ParallelTransition transition = new ParallelTransition(fadeTransition, translateTransition);
+                transition.setNode(node);
+                transition.play();
+            }
+        });
+        StackPane pane = new StackPane();
+        for (int i = nodes.length - 1; i >= 0; i--) {
+            pane.getChildren().add(nodes[i]);
+        }
+        return pane;
     }
 
     public HBox getIconBox(String path, int face) {

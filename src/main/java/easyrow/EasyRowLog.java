@@ -18,6 +18,10 @@ public class EasyRowLog {
 
     public static void main(String[] args) {
         EasyRowLog log =  new EasyRowLog();
+        log.clearDatabase();
+        log.saveAthlete(new Athlete("Lasse", "Stark", Club.RGW, Prio.JUNIORS, LocalDate.of(2008, 12, 2), 023472034));
+        Athlete lasse = log.getAthletes().get(0);
+        System.out.println(lasse.getFullName() + " " + lasse.getDateOfBirth() + " " + lasse.getClub());
     }
 
     public EasyRowLog() {
@@ -61,5 +65,17 @@ public class EasyRowLog {
         LevenshteinDistance ld = new LevenshteinDistance();
         boats.sort(Comparator.comparingInt(boat -> ld.apply(boat.name().toLowerCase(), input.toLowerCase())));
         return boats;
+    }
+
+    public void saveBoat(Boat boat) {
+        boatDatabase.saveBoat(boat);
+    }
+
+    public void saveAthlete(Athlete athlete) {
+        athleteDatabase.saveAthlete(athlete);
+    }
+
+    public void clearDatabase() {
+        athleteDatabase.clearDatabase();
     }
 }
