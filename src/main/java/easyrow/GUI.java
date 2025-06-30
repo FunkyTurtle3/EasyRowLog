@@ -78,6 +78,7 @@ public class GUI extends Application {
 
         // --- Left Panel ---
         VBox leftPanel = new VBox(10);
+        leftPanel.setBackground(new Background(new BackgroundFill(Color.web("#F5DFBB"), CornerRadii.EMPTY, Insets.EMPTY)));
         leftPanel.setPrefWidth(width / 4);
 
         // --- Center Panel ---
@@ -102,10 +103,8 @@ public class GUI extends Application {
         Rectangle nightSky = new Rectangle(width / 2, height);
         nightSky.setFill(nightSkyGradient);
         nightSky.setOpacity(0);
-        if (getCurrentSunProgress() == -1 && nightSky.getOpacity() == 0) {
-            FadeTransition nightAnimation = new FadeTransition(Duration.minutes(4), nightSky);
-            nightAnimation.setToValue(1);
-            nightAnimation.play();
+        if (getCurrentSunProgress() == -1) {
+            nightSky.setOpacity(1);
         }
 
         Circle sunDisplay = new Circle(width / 20);
@@ -138,11 +137,10 @@ public class GUI extends Application {
         ImageView windDirectionImgView = getSimpleIconImgView("/UI/compass_symbol.png");
         windDirectionImgView.setRotate(Objects.requireNonNull(getWeatherJson("Berlin")).getJSONObject("wind").getInt("deg") + 180);
 
-
         Label windSpeedLabel = new Label(((int) getWeatherJson().getJSONObject("wind").getDouble("speed")) + "");
+        windSpeedLabel.setTooltip(new Tooltip("Windgeschwindigkeit: " + windSpeedLabel.getText() + "km/h"));
         windSpeedLabel.setFont(Resource.getFont("/anta_regular.otf", (int) (height / 30)));
         windSpeedLabel.setTextFill(Color.WHITE);
-        windSpeedLabel.setTooltip(new Tooltip("Windgeschwindigkeit: " + windSpeedLabel.getText() + "km/h"));
         windSpeedLabel.setAlignment(Pos.CENTER);
 
         HBox symbolPane = new HBox(new StackPane(getInfoCircle(false), weatherSymbol), new StackPane(getInfoCircle(false), windSpeedLabel), new StackPane(getInfoCircle(false), windDirectionImgView), new StackPane(offCircle, getIconBox("/UI/shutdown_symbol.png", -1)));
@@ -166,14 +164,14 @@ public class GUI extends Application {
         wavesImageView.setY(height - waveImg.getHeight() / 2);
         wavesImageView.setEffect(new DropShadow(width / 200, Color.WHITE));
 
-        Image leftSweep = Resource.getTexture("/oars/sweep_left.png");
+        Image leftSweep = Resource.getTexture("/oars/sweep_dark_blue.png");
         ImageView sweepLeftImgView = new ImageView(leftSweep);
         sweepLeftImgView.setPreserveRatio(true);
         sweepLeftImgView.setFitHeight(height * 1.03);
         sweepLeftImgView.setX(-1 * height / 18);
         sweepLeftImgView.setY(height * -0.03);
 
-        Image rightSweep = Resource.getTexture("/oars/sweep_left.png");
+        Image rightSweep = Resource.getTexture("/oars/sweep_dark_blue.png");
         ImageView sweepRightImgView = new ImageView(rightSweep);
         sweepRightImgView.setScaleX(-1);
         sweepRightImgView.setPreserveRatio(true);
@@ -183,11 +181,12 @@ public class GUI extends Application {
 
         // --- Right Panel ---
         StackPane rightPanel = new StackPane();
-        rightPanel.setStyle("-fx-background-color: #ffffff;");
+        rightPanel.setBackground(new Background(new BackgroundFill(Color.web("#f4d58d"), CornerRadii.EMPTY, Insets.EMPTY)));
         rightPanel.setPrefWidth(width / 4);
+        rightPanel.setEffect(new DropShadow(10, Color.web("#F5DFBB")));
 
         // Alles hinzufügen
-        centerPane.getChildren().addAll(clearSky, sunsetSunriseSky, nightSky, sunDisplay, infobox, wavesImageView, sweepLeftImgView, sweepRightImgView);
+        centerPane.getChildren().addAll(clearSky, sunsetSunriseSky, nightSky, sunDisplay, infobox, wavesImageView);
 
         // Add Panels to main layout
         mainPane.setLeft(leftPanel);
