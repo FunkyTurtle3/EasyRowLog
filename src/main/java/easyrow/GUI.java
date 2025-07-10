@@ -32,8 +32,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
-import java.util.Stack;
-
 import org.json.JSONObject;
 
 
@@ -79,10 +77,11 @@ public class GUI extends Application {
         stage.getIcons().add(Resource.getTexture("/UI/logo_500x500.png"));
 
         // --- Left Panel ---
-        Pane leftPanel = new StackPane();
+        StackPane leftPanel = new StackPane();
         leftPanel.setPrefWidth(width / 4);
 
-        StackPane testDropdown = getDropdown(getInfoCircle(false), getInfoCircle(false), getInfoCircle(false));
+        StackPane testDropdown = getDropdown(0.2, getInfoCircle(false), getInfoCircle(false), getInfoCircle(false));
+        testDropdown.setPickOnBounds(false);
 
         // --- Center Panel ---
         Pane centerPane = new Pane();
@@ -360,37 +359,40 @@ public class GUI extends Application {
         return iconSymbolBox;
     }
 
-    public StackPane getDropdown(Node... nodes) {
-        Node first = nodes[0];
+    public StackPane getDropdown(double insets, Node... nodes) {
+        StackPane pane = new StackPane();
+        pane.setPickOnBounds(false);
+        //pane.setBackground(new Background(new BackgroundFill(Color.web("#000000", 0.5), CornerRadii.EMPTY, Insets.EMPTY)));
+        ParallelTransition openTransition = new ParallelTransition();
+        ParallelTransition closeTransition = new ParallelTransition();
+
+        double transY = 1 + insets;
+
+        pane.setMaxSize(Region.USE_COMPUTED_SIZE, Region.USE_COMPUTED_SIZE);
+        pane.setPrefSize(Region.USE_COMPUTED_SIZE, Region.USE_COMPUTED_SIZE);
+
         for (int i = 1; i < nodes.length; i++) {
             nodes[i].setOpacity(0);
+            FadeTransition fadeInTransition = new FadeTransition(Duration.millis(300), nodes[i]);
+            TranslateTransition translateInTransition = new TranslateTransition(Duration.millis(300), nodes[i]);
+            translateInTransition.setToY(nodes[0].getLayoutBounds().getHeight() * i * transY);
+            fadeInTransition.setToValue(1);
+            openTransition.getChildren().addAll(translateInTransition, fadeInTransition);
+            FadeTransition fadeOutTransition = new FadeTransition(Duration.millis(300), nodes[i]);
+            TranslateTransition translateOutTransition = new TranslateTransition(Duration.millis(300), nodes[i]);
+            translateOutTransition.setToY(0);
+            fadeOutTransition.setToValue(0);
+            closeTransition.getChildren().addAll(translateOutTransition, fadeOutTransition);
         }
-        FadeTransition fadeTransition = new FadeTransition(Duration.millis(300));
-        TranslateTransition translateTransition = new TranslateTransition(Duration.millis(300));
 
-        first.setOnMouseEntered(mouseEvent -> {
-            for (int i = 0; i < nodes.length; i++) {
-                System.out.println("funkt eigentlich");
-                translateTransition.setToY(first.getBoundsInLocal().getHeight() * i);
-                fadeTransition.setToValue(1);
-                ParallelTransition transition = new ParallelTransition(fadeTransition, translateTransition);
-                transition.setNode(nodes[i]);
-                transition.play();
-            }
+        pane.setOnMouseEntered(event -> {
+            openTransition.play();
         });
-        first.setOnMouseExited(mouseEvent -> {
-            for (Node node : nodes) {
-                translateTransition.setToY(0);
-                fadeTransition.setToValue(0);
-                ParallelTransition transition = new ParallelTransition(fadeTransition, translateTransition);
-                transition.setNode(node);
-                transition.play();
-            }
+        pane.setOnMouseExited(event -> {
+            closeTransition.play();
         });
-        StackPane pane = new StackPane();
-        for (int i = nodes.length - 1; i >= 0; i--) {
-            pane.getChildren().add(nodes[i]);
-        }
+
+        pane.getChildren().addAll(nodes);
         return pane;
     }
 
