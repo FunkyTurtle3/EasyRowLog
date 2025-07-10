@@ -280,6 +280,14 @@ public class GUI extends Application {
         return rectangle;
     }
 
+    public HBox getInfoCircleBox(boolean hoverEffect) {
+        HBox hbox =  new HBox();
+        hbox.setBackground(new Background(new BackgroundFill(Color.web("#000000"), CornerRadii.EMPTY, Insets.EMPTY)));
+        hbox.getChildren().add(getInfoCircle(hoverEffect));
+        hbox.setMouseTransparent(true);
+        return hbox;
+    }
+
     public Circle getInfoCircle(boolean hoverEffect) {
         Circle circle = new Circle(height / 30);
         circle.setFill(Color.web("#FFFFFF", 0.2));
@@ -361,14 +369,12 @@ public class GUI extends Application {
 
     public StackPane getDropdown(double insets, Node... nodes) {
         StackPane pane = new StackPane();
-        Background bg = new Background(new BackgroundFill(Color.web("#000000"), CornerRadii.EMPTY, Insets.EMPTY));
-        pane.setBackground(bg);
         ParallelTransition openTransition = new ParallelTransition();
         ParallelTransition closeTransition = new ParallelTransition();
 
         double transY = 1 + insets;
 
-        pane.setMaxSize(Region.USE_PREF_SIZE, nodes[0].getLayoutBounds().getHeight() * nodes.length * transY);
+        pane.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
         pane.setPickOnBounds(false);
 
         for (int i = 1; i < nodes.length; i++) {
