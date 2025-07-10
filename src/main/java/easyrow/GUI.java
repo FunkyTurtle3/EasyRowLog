@@ -361,15 +361,15 @@ public class GUI extends Application {
 
     public StackPane getDropdown(double insets, Node... nodes) {
         StackPane pane = new StackPane();
-        pane.setPickOnBounds(false);
-        //pane.setBackground(new Background(new BackgroundFill(Color.web("#000000", 0.5), CornerRadii.EMPTY, Insets.EMPTY)));
+        Background bg = new Background(new BackgroundFill(Color.web("#000000"), CornerRadii.EMPTY, Insets.EMPTY));
+        pane.setBackground(bg);
         ParallelTransition openTransition = new ParallelTransition();
         ParallelTransition closeTransition = new ParallelTransition();
 
         double transY = 1 + insets;
 
-        pane.setMaxSize(Region.USE_COMPUTED_SIZE, Region.USE_COMPUTED_SIZE);
-        pane.setPrefSize(Region.USE_COMPUTED_SIZE, Region.USE_COMPUTED_SIZE);
+        pane.setMaxSize(Region.USE_PREF_SIZE, nodes[0].getLayoutBounds().getHeight() * nodes.length * transY);
+        pane.setPickOnBounds(false);
 
         for (int i = 1; i < nodes.length; i++) {
             nodes[i].setOpacity(0);
