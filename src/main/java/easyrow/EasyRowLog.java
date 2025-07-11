@@ -1,5 +1,6 @@
 package easyrow;
 
+import easyrow.cofig.ConfigManager;
 import easyrow.data.BoatType;
 import easyrow.data.Club;
 import easyrow.data.Prio;
@@ -7,6 +8,9 @@ import easyrow.database.AthleteDatabase;
 import easyrow.database.BoatDatabase;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
@@ -22,6 +26,7 @@ public class EasyRowLog {
         log.saveAthlete(new Athlete("Lasse", "Stark", Club.RGW, Prio.JUNIORS, LocalDate.of(2008, 12, 2), 023472034));
         Athlete lasse = log.getAthletes().get(0);
         System.out.println(lasse.getFullName() + " " + lasse.getDateOfBirth() + " " + lasse.getClub());
+        ConfigManager.init();
     }
 
     public EasyRowLog() {
