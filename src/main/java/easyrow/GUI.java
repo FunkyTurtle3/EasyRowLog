@@ -3,6 +3,7 @@ package easyrow;
 import easyrow.compat.MacIconSetter;
 import javafx.animation.*;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -39,11 +40,12 @@ import org.json.JSONObject;
 public class GUI extends Application {
 
     private static final Logger log = LoggerFactory.getLogger(GUI.class);
-    private EasyRowLog easyRowLog;
+    private final EasyRowLog easyRowLog;
     private static final String API_KEY = "2c4efc9c04e72b05668e99873bae5cdb";
     private double latitude;
     private double longitude;
     private ImageView weatherImgView;
+    private Label descriptionLabel;
     private double width;
     private double height;
 
@@ -71,7 +73,12 @@ public class GUI extends Application {
         weatherImgView = new ImageView(getCurrentWeatherSymbol());
         weatherImgView.setFitHeight(width / 40);
         weatherImgView.setPreserveRatio(true);
-        weatherImgView.setEffect(new DropShadow(width / 200, 0, 0, Color.web("#FFFFFF", 0.25)));
+        weatherImgView.setEffect(new DropShadow(width / 200, 0, 0, Color.web("#000000", 0.20)));
+
+        descriptionLabel = getInfoLabel("Test");
+        descriptionLabel.setAlignment(Pos.CENTER);
+        descriptionLabel.setLayoutX(width / 4 - descriptionLabel.getLayoutBounds().getWidth()/ 2);
+        descriptionLabel.setLayoutY(height / 3);
 
         BorderPane mainPane = new BorderPane();
 
@@ -82,8 +89,20 @@ public class GUI extends Application {
         StackPane leftPanel = new StackPane();
         leftPanel.setPrefWidth(width / 4);
 
-        StackPane testDropdown = getDropdown(0.2, getInfoCircle(false), getInfoCircle(false), getInfoCircle(false));
-        testDropdown.setPickOnBounds(false);
+        Circle addCircle = getInfoCircle(true);
+        HBox addIconBox = getIconBox("/UI/add_symbol.png", -1);
+        StackPane addPane = new StackPane(addCircle, addIconBox);
+        addCircle.setOnMouseClicked(mouseEvent -> {
+            RotateTransition rotateTransition = new RotateTransition(Duration.millis(300), addIconBox);
+            rotateTransition.setToAngle(addIconBox.getRotate() != 45 ? 45 : 0);
+            rotateTransition.play();
+        });
+        StackPane addAthletePane = new StackPane(getInfoCircle(true), getIconBox("/UI/athlete_symbol.png", -1));
+        StackPane addBoatPane = new StackPane(getInfoCircle(true), getIconBox("/UI/boat_symbol.png", -1));
+        StackPane addLocationPane = new StackPane(getInfoCircle(true), getIconBox("/UI/location_marker_symbol.png", -1));
+
+        StackPane addDropdown = getDropdown(0.2, addPane, addAthletePane, addBoatPane, addLocationPane);
+        addDropdown.setPadding(new Insets(width / 60));
 
         // --- Center Panel ---
         Pane centerPane = new Pane();
@@ -141,13 +160,28 @@ public class GUI extends Application {
         ImageView windDirectionImgView = getSimpleIconImgView("/UI/compass_symbol.png");
         windDirectionImgView.setRotate(Objects.requireNonNull(getWeatherJson("Berlin")).getJSONObject("wind").getInt("deg") + 180);
 
+
         Label windSpeedLabel = new Label(((int) getWeatherJson().getJSONObject("wind").getDouble("speed")) + "");
         windSpeedLabel.setTooltip(new Tooltip("Windgeschwindigkeit: " + windSpeedLabel.getText() + "km/h"));
         windSpeedLabel.setFont(Resource.getFont("/anta_regular.otf", (int) (height / 30)));
         windSpeedLabel.setTextFill(Color.WHITE);
         windSpeedLabel.setAlignment(Pos.CENTER);
+        windSpeedLabel.setEffect(new DropShadow(width / 200, 0, 0, Color.web("#000000", 0.20)));
 
-        HBox symbolPane = new HBox(new StackPane(getInfoCircle(false), weatherSymbol), new StackPane(getInfoCircle(false), windSpeedLabel), new StackPane(getInfoCircle(false), windDirectionImgView), new StackPane(offCircle, getIconBox("/UI/shutdown_symbol.png", -1)));
+        StackPane windDirectionPane = new StackPane(getInfoCircle(false), windDirectionImgView);
+        String firstWindDirection = "W";
+        if (Objects.requireNonNull(getWeatherJson()).getJSONObject("wind").getInt("deg") < 270) {
+            firstWindDirection = "S";
+        }
+        if (Objects.requireNonNull(getWeatherJson()).getJSONObject("wind").getInt("deg") < 180) {
+            firstWindDirection = "O";
+        }
+        if (Objects.requireNonNull(getWeatherJson()).getJSONObject("wind").getInt("deg") < 90) {
+            firstWindDirection = "N";
+        }
+        Tooltip.install(windDirectionPane, new Tooltip(firstWindDirection));
+
+        HBox symbolPane = new HBox(new StackPane(getInfoCircle(false), weatherSymbol), new StackPane(getInfoCircle(false), windSpeedLabel), windDirectionPane, new StackPane(offCircle, getIconBox("/UI/shutdown_symbol.png", -1)));
         symbolPane.setAlignment(Pos.CENTER);
         symbolPane.setSpacing(18 * width / height);
 
@@ -189,15 +223,15 @@ public class GUI extends Application {
 
 
         // Alles hinzufügen
-        centerPane.getChildren().addAll(sunDisplay, infobox, wavesImageView);
+        centerPane.getChildren().addAll(sunDisplay, infobox, wavesImageView, addDropdown, descriptionLabel);
 
         Rectangle leftSidebar = getInfoRectangle((width / 4) - (width / 30), height - width / 30);
-        leftPanel.setPadding(new Insets(width / 60, width / 60, width / 60, width / 60));
+        leftPanel.setPadding(new Insets(width / 60));
 
-        leftPanel.getChildren().addAll(leftSidebar, testDropdown);
+        leftPanel.getChildren().addAll(leftSidebar);
 
         Rectangle rightSidebar = getInfoRectangle((width / 4) - (width / 30), height - width / 30);
-        rightPanel.setPadding(new Insets(width / 60, width / 60, width / 60, width / 60));
+        rightPanel.setPadding(new Insets(width / 60));
 
         rightPanel.getChildren().add(rightSidebar);
 
@@ -243,8 +277,19 @@ public class GUI extends Application {
             }
 
             RotateTransition compassRotate = new RotateTransition(Duration.seconds(2) , windDirectionImgView);
-            compassRotate.setToAngle(Objects.requireNonNull(getWeatherJson("Berlin")).getJSONObject("wind").getInt("deg") + 180);
+            compassRotate.setToAngle(Objects.requireNonNull(getWeatherJson()).getJSONObject("wind").getInt("deg") + 180);
             compassRotate.play();
+            String windDirection = "W";
+            if (Objects.requireNonNull(getWeatherJson()).getJSONObject("wind").getInt("deg") < 270) {
+                windDirection = "S";
+            }
+            if (Objects.requireNonNull(getWeatherJson()).getJSONObject("wind").getInt("deg") < 180) {
+                windDirection = "O";
+            }
+            if (Objects.requireNonNull(getWeatherJson()).getJSONObject("wind").getInt("deg") < 90) {
+                windDirection = "N";
+            }
+            Tooltip.install(windDirectionPane, new Tooltip(windDirection));
         }));
         weatherCycle.setCycleCount(Animation.INDEFINITE);
         weatherCycle.play();
@@ -282,12 +327,31 @@ public class GUI extends Application {
         return rectangle;
     }
 
-    public HBox getInfoCircleBox(boolean hoverEffect) {
-        HBox hbox =  new HBox();
-        hbox.setBackground(new Background(new BackgroundFill(Color.web("#000000"), CornerRadii.EMPTY, Insets.EMPTY)));
-        hbox.getChildren().add(getInfoCircle(hoverEffect));
-        hbox.setMouseTransparent(true);
-        return hbox;
+    public Rectangle getInfoCircleExpandable(boolean hoverEffect, String content) {
+        Rectangle rectangle = getInfoRectangle(height / 15,height / 15);
+        Label text = getInfoLabel(content);
+        text.setOpacity(0);
+        rectangle.setOnMouseEntered(mouseEvent -> {
+            FillTransition animation = new FillTransition(Duration.millis(300), rectangle, (Color) rectangle.getFill(), Color.web("#8E8E8E", 0.2));
+            animation.play();
+        });
+        rectangle.setOnMouseExited(mouseEvent -> {
+            FillTransition animation = new FillTransition(Duration.millis(300), rectangle, (Color) rectangle.getFill(), Color.web("#FFFFFF", 0.2));
+            animation.play();
+        });
+        rectangle.setOnMousePressed(mouseEvent -> {
+            ScaleTransition animation = new ScaleTransition(Duration.millis(200), rectangle);
+            animation.setToX(0.9);
+            animation.setToY(0.9);
+            animation.play();
+        });
+        rectangle.setOnMouseReleased(mouseEvent -> {
+            ScaleTransition animation = new ScaleTransition(Duration.millis(200), rectangle);
+            animation.setToX(1);
+            animation.setToY(1);
+            animation.play();
+        });
+        return rectangle;
     }
 
     public Circle getInfoCircle(boolean hoverEffect) {
@@ -326,7 +390,7 @@ public class GUI extends Application {
         Label label = new Label();
         label.setTextFill(Color.WHITE);
         label.setFont(Resource.getFont("/anta_regular.otf", (int) (height / 20))); // beliebig anpassen
-        label.setEffect(new DropShadow(width / 200, 0, 0, Color.web("#FFFFFF", 0.25)));
+        label.setEffect(new DropShadow(width / 200, 0, 0, Color.web("#000000", 0.20)));
         label.setAlignment(Pos.CENTER);
         label.setText(text);
         return label;
@@ -336,7 +400,7 @@ public class GUI extends Application {
         ImageView iconImgView = new ImageView(Resource.getTexture(path));
         iconImgView.setFitHeight(this.width / 40);
         iconImgView.setPreserveRatio(true);
-        iconImgView.setEffect(new DropShadow(width / 200, 0, 0, Color.web("#FFFFFF", 0.25)));
+        iconImgView.setEffect(new DropShadow(width / 200, 0, 0, Color.web("#000000", 0.20)));
         return iconImgView;
     }
 
@@ -376,31 +440,39 @@ public class GUI extends Application {
 
         double transY = 1 + insets;
 
-        pane.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+        pane.setMaxSize(Region.USE_PREF_SIZE, nodes[0].getLayoutBounds().getHeight() * nodes.length * transY);
         pane.setPickOnBounds(false);
-
-        for (int i = 1; i < nodes.length; i++) {
-            nodes[i].setOpacity(0);
-            FadeTransition fadeInTransition = new FadeTransition(Duration.millis(300), nodes[i]);
-            TranslateTransition translateInTransition = new TranslateTransition(Duration.millis(300), nodes[i]);
-            translateInTransition.setToY(nodes[0].getLayoutBounds().getHeight() * i * transY);
-            fadeInTransition.setToValue(1);
-            openTransition.getChildren().addAll(translateInTransition, fadeInTransition);
-            FadeTransition fadeOutTransition = new FadeTransition(Duration.millis(300), nodes[i]);
-            TranslateTransition translateOutTransition = new TranslateTransition(Duration.millis(300), nodes[i]);
-            translateOutTransition.setToY(0);
-            fadeOutTransition.setToValue(0);
-            closeTransition.getChildren().addAll(translateOutTransition, fadeOutTransition);
-        }
-
-        pane.setOnMouseEntered(event -> {
-            openTransition.play();
-        });
-        pane.setOnMouseExited(event -> {
-            closeTransition.play();
-        });
-
         pane.getChildren().addAll(nodes);
+
+        Platform.runLater(() -> {
+            double nodeHeight = nodes[0].getLayoutBounds().getHeight();
+
+            pane.setMaxSize(Region.USE_PREF_SIZE, nodeHeight * nodes.length * transY);
+
+            for (int i = 1; i < nodes.length; i++) {
+                nodes[i].setOpacity(0);
+                nodes[i].setPickOnBounds(false);
+                FadeTransition fadeInTransition = new FadeTransition(Duration.millis(300), nodes[i]);
+                TranslateTransition translateInTransition = new TranslateTransition(Duration.millis(300), nodes[i]);
+                translateInTransition.setToY(nodeHeight * i * transY);
+                fadeInTransition.setToValue(1);
+                openTransition.getChildren().addAll(translateInTransition, fadeInTransition);
+
+                FadeTransition fadeOutTransition = new FadeTransition(Duration.millis(300), nodes[i]);
+                TranslateTransition translateOutTransition = new TranslateTransition(Duration.millis(300), nodes[i]);
+                translateOutTransition.setToY(0);
+                fadeOutTransition.setToValue(0);
+                closeTransition.getChildren().addAll(translateOutTransition, fadeOutTransition);
+            }
+        });
+        nodes[0].setPickOnBounds(false);
+        nodes[0].toFront();
+        nodes[0].setOnMouseClicked(event -> {
+            if (nodes[nodes.length - 1].getTranslateY() > nodes[0].getTranslateY()){
+                closeTransition.play();
+            } else openTransition.play();
+        });
+
         return pane;
     }
 

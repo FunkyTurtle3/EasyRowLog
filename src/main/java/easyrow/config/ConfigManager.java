@@ -1,4 +1,4 @@
-package easyrow.cofig;
+package easyrow.config;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -15,7 +15,6 @@ public class ConfigManager {
         if (!configFile.exists()) {
             // Nur beim ersten Start: Datei mit Default-Werten erstellen
             config.setProperty("user.language", "en");
-            config.setProperty("user.country", "EN");
             config.setProperty("theme", "dark");
 
             try (FileOutputStream output = new FileOutputStream(configFile)) {

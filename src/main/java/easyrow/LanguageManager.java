@@ -1,6 +1,6 @@
 package easyrow;
 
-import easyrow.cofig.ConfigManager;
+import easyrow.config.ConfigManager;
 
 import java.util.Locale;
 import java.util.ResourceBundle;

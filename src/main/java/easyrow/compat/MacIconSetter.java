@@ -7,7 +7,10 @@ import java.net.URL;
 
 public class MacIconSetter {
     public static void setDockIcon() {
-        if (Taskbar.isTaskbarSupported()) {
+        String os = System.getProperty("os.name").toLowerCase();
+        boolean isMac = os.contains("mac");
+
+        if (isMac && Taskbar.isTaskbarSupported()) {
             Taskbar taskbar = Taskbar.getTaskbar();
             try {
                 URL imageURL = MacIconSetter.class.getResource("/assets/texture/UI/logo_500x500.png");

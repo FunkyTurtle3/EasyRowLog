@@ -1,6 +1,6 @@
 package easyrow;
 
-import easyrow.cofig.ConfigManager;
+import easyrow.config.ConfigManager;
 import easyrow.data.BoatType;
 import easyrow.data.Club;
 import easyrow.data.Prio;
@@ -8,9 +8,6 @@ import easyrow.database.AthleteDatabase;
 import easyrow.database.BoatDatabase;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
