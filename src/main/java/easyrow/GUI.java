@@ -1,5 +1,6 @@
 package easyrow;
 
+import easyrow.compat.MacIconSetter;
 import javafx.animation.*;
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -75,6 +76,7 @@ public class GUI extends Application {
         BorderPane mainPane = new BorderPane();
 
         stage.getIcons().add(Resource.getTexture("/UI/logo_500x500.png"));
+        MacIconSetter.setDockIcon();
 
         // --- Left Panel ---
         StackPane leftPanel = new StackPane();
