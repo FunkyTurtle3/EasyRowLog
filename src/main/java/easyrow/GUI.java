@@ -1,6 +1,8 @@
 package easyrow;
 
 import easyrow.compat.MacIconSetter;
+import easyrow.data.Club;
+import easyrow.data.Prio;
 import javafx.animation.*;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -8,8 +10,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -19,6 +20,7 @@ import javafx.scene.paint.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
+import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -29,6 +31,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -75,9 +78,9 @@ public class GUI extends Application {
         weatherImgView.setPreserveRatio(true);
         weatherImgView.setEffect(new DropShadow(width / 200, 0, 0, Color.web("#000000", 0.20)));
 
-        descriptionLabel = getInfoLabel("Test");
+        descriptionLabel = getInfoLabel("");
         descriptionLabel.setAlignment(Pos.CENTER);
-        descriptionLabel.setLayoutX(width / 4 - descriptionLabel.getLayoutBounds().getWidth()/ 2);
+        descriptionLabel.setLayoutX(width / 4);
         descriptionLabel.setLayoutY(height / 3);
 
         BorderPane mainPane = new BorderPane();
@@ -92,14 +95,16 @@ public class GUI extends Application {
         Circle addCircle = getInfoCircle(true);
         HBox addIconBox = getIconBox("/UI/add_symbol.png", -1);
         StackPane addPane = new StackPane(addCircle, addIconBox);
-        addCircle.setOnMouseClicked(mouseEvent -> {
-            RotateTransition rotateTransition = new RotateTransition(Duration.millis(300), addIconBox);
-            rotateTransition.setToAngle(addIconBox.getRotate() != 45 ? 45 : 0);
-            rotateTransition.play();
-        });
         StackPane addAthletePane = new StackPane(getInfoCircle(true), getIconBox("/UI/athlete_symbol.png", -1));
+        addAthletePane.setOnMouseClicked(event -> showAthleteEntryWindow(stage));
         StackPane addBoatPane = new StackPane(getInfoCircle(true), getIconBox("/UI/boat_symbol.png", -1));
         StackPane addLocationPane = new StackPane(getInfoCircle(true), getIconBox("/UI/location_marker_symbol.png", -1));
+
+        addCircle.setOnMouseClicked(mouseEvent -> {
+            RotateTransition rotateTransition = new RotateTransition(Duration.millis(300), addIconBox);
+            rotateTransition.setToAngle(addAthletePane.getTranslateY() > addPane.getTranslateY() ? 0 : 45);
+            rotateTransition.play();
+        });
 
         StackPane addDropdown = getDropdown(0.2, addPane, addAthletePane, addBoatPane, addLocationPane);
         addDropdown.setPadding(new Insets(width / 60));
@@ -111,6 +116,8 @@ public class GUI extends Application {
         RadialGradient clearSkyGradient = new RadialGradient(0, 0, 0.5, 1, 1,  true, CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("C7FFF4")), new Stop(1, Color.web("0096C7"))));
         RadialGradient sunsetSunriseGradient = new RadialGradient(0, 0, 0.5, 1, 1, true, CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("FCBF49")), new Stop(1, Color.web("D62828"))));
         RadialGradient nightSkyGradient = new RadialGradient(0, 0, 0.5, 1, 1, true, CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("03045E")), new Stop(1, Color.web("0D1B2A"))));
+        RadialGradient fogSkyGradient = new RadialGradient(0, 0, 0.5, 1, 1, true, CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("FFFFFF")), new Stop(1, Color.web("7F7F7F"))));
+
 
         Rectangle clearSky = new Rectangle(width, height);
         clearSky.setFill(clearSkyGradient);
@@ -130,10 +137,19 @@ public class GUI extends Application {
             nightSky.setOpacity(1);
         }
 
+        Rectangle fogSky = new Rectangle(width, height);
+        fogSky.setFill(fogSkyGradient);
+        fogSky.setOpacity(0);
+        if (getWeatherJson().getJSONObject("clouds").getInt("all") > 90) {
+            fogSky.setOpacity(1);
+        }
+
+
+
         Circle sunDisplay = new Circle(width / 20);
         sunDisplay.setFill(new RadialGradient(0, 0, 0.5, 0.5, 1,  true,
                 CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("#FFF0D7")), new Stop(1, Color.web("#FFDB72")))));
-        sunDisplay.setCenterX(width / 4);
+        sunDisplay.setCenterX(width / 2);
         sunDisplay.setTranslateY(getCurrentSunPos() + sunDisplay.getRadius());
         sunDisplay.setEffect(new DropShadow(75, Color.web("#F7B801", 0.75)));
         TranslateTransition sunTranslate = new TranslateTransition(Duration.seconds(60), sunDisplay);
@@ -223,7 +239,7 @@ public class GUI extends Application {
 
 
         // Alles hinzufügen
-        centerPane.getChildren().addAll(sunDisplay, infobox, wavesImageView, addDropdown, descriptionLabel);
+        centerPane.getChildren().addAll(infobox, wavesImageView, addDropdown, descriptionLabel);
 
         Rectangle leftSidebar = getInfoRectangle((width / 4) - (width / 30), height - width / 30);
         leftPanel.setPadding(new Insets(width / 60));
@@ -236,7 +252,7 @@ public class GUI extends Application {
         rightPanel.getChildren().add(rightSidebar);
 
 
-        mainPane.getChildren().addAll(clearSky, sunsetSunriseSky, nightSky);
+        mainPane.getChildren().addAll(clearSky, sunsetSunriseSky, nightSky, sunDisplay, fogSky);
 
         // Add Panels to main layout
         mainPane.setLeft(leftPanel);
@@ -269,6 +285,15 @@ public class GUI extends Application {
                 sunsetSunriseAnimation.play();
             }
 
+            if (getWeatherJson().getJSONObject("clouds").getInt("all") > 90) {
+                FadeTransition fogSkyFadeTransition = new FadeTransition(Duration.seconds(60), fogSky);
+                fogSkyFadeTransition.setToValue(1);
+                fogSkyFadeTransition.play();
+            } else {
+                FadeTransition fogSkyFadeTransition = new FadeTransition(Duration.seconds(60), fogSky);
+                fogSkyFadeTransition.setToValue(0);
+                fogSkyFadeTransition.play();
+            }
 
             if (getCurrentSunProgress() == -1 && nightSky.getOpacity() == 0) {
                 FadeTransition nightAnimation = new FadeTransition(Duration.minutes(4), nightSky);
@@ -298,6 +323,141 @@ public class GUI extends Application {
         stage.setScene(scene);
         stage.setFullScreen(true);
         stage.show();
+    }
+
+    private void showAthleteEntryWindow(Stage parentStage) {
+        TextField firstNameTextField = getSimpleTextField();
+        firstNameTextField.setPromptText("First Name");
+        firstNameTextField.setTextFormatter(new TextFormatter<>(change -> {
+            String newText = change.getControlNewText();
+            if (newText.matches("[a-zA-Z]*")) {
+                return change;
+            }
+            return null;
+        }));
+
+        TextField lastNameTextField = getSimpleTextField();
+        lastNameTextField.setPromptText("Last Name");
+        lastNameTextField.setTextFormatter(new TextFormatter<>(change -> {
+            String newText = change.getControlNewText();
+            if (newText.matches("[a-zA-Z]*")) {
+                return change;
+            }
+            return null;
+        }));
+        TextField clubTextField = getSimpleTextField();
+        clubTextField.setPromptText("Club");
+
+        TextField prioTextField = getSimpleTextField();
+        prioTextField.setPromptText("Priority");
+
+        DatePicker dateOfBirthPicker = new DatePicker();
+
+        dateOfBirthPicker.getEditor().setPrefWidth(width / 6);
+        dateOfBirthPicker.getEditor().setPrefHeight(height / 20);
+        dateOfBirthPicker.getEditor().setFont(Resource.getFont("/anta_regular.otf", (int) (height / 40)));
+        dateOfBirthPicker.setStyle(
+                "-fx-background-color: #212124;" +
+                        "-fx-background-radius: 10;" +
+                        "-fx-border-radius: 10;" +
+                        "-fx-border-color: #818181;" +
+                        "-fx-border-width: 2;"
+        );
+        dateOfBirthPicker.getEditor().setStyle(
+                "-fx-background-color: #212124;" +
+                        "-fx-text-fill: #ffffff;" +
+                        "-fx-background-radius: 10;" +
+                        "-fx-border-radius: 10;"
+        );
+        TextField licenseNumberTextField = getSimpleTextField();
+        licenseNumberTextField.setPromptText("License Number (optional)");
+        licenseNumberTextField.setTextFormatter(new TextFormatter<>(change -> {
+            String newText = change.getControlNewText();
+            if (newText.matches("\\d*") && newText.length() <= 10) {
+                return change;
+            }
+            return null;
+        }));
+
+        Button submitButton = new Button();
+        submitButton.setGraphic(getSimpleIconImgView("/UI/save_symbol.png"));
+        submitButton.setOnAction(e -> {
+            try {
+                easyRowLog.saveAthlete(new Athlete(firstNameTextField.getText(), lastNameTextField.getText(), Club.valueOf(clubTextField.getText().toUpperCase()), Prio.getPrioByInt(Integer.parseInt(prioTextField.getText())), dateOfBirthPicker.getValue(), Long.parseLong(licenseNumberTextField.getText())));
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
+        });
+        submitButton.setPrefWidth(width / 12);
+        submitButton.setPrefHeight(height / 40);
+        submitButton.setFont(Resource.getFont("/anta_regular.otf", (int) (height / 40)));
+        submitButton.setStyle(
+                "-fx-background-radius: 10;" +     // abgerundete Ecken
+                        "-fx-border-radius: 10;" +         // abgerundeter Rahmen
+                        "-fx-border-color: #818181;" +     // Farbe des Rahmens
+                        "-fx-text-fill: #ffffff;" +     // Farbe des Rahmens
+                        "-fx-background-color: #212124;" +
+                        "-fx-border-width: 2;"             // Dicke des Rahmens
+        );
+
+        Button cancelButton = new Button();
+        ImageView cancelImgView = getSimpleIconImgView("/UI/add_symbol.png");
+        cancelImgView.setRotate(45);
+        cancelButton.setGraphic(cancelImgView);
+        cancelButton.setOnAction(e -> {
+            ((Stage) cancelButton.getScene().getWindow()).close();
+        });
+        cancelButton.setPrefWidth(width / 12);
+        cancelButton.setPrefHeight(height / 40);
+        cancelButton.setFont(Resource.getFont("/anta_regular.otf", (int) (height / 40)));
+        cancelButton.setStyle(
+                "-fx-background-radius: 10;" +     // abgerundete Ecken
+                        "-fx-border-radius: 10;" +         // abgerundeter Rahmen
+                        "-fx-border-color: #818181;" +     // Farbe des Rahmens
+                        "-fx-text-fill: #ffffff;" +     // Farbe des Rahmens
+                        "-fx-background-color: #212124;" +
+                        "-fx-border-width: 2;"             // Dicke des Rahmens
+        );
+        VBox layout = new VBox(10,
+                new Label("Bitte Daten eingeben:"),
+                firstNameTextField,
+                lastNameTextField,
+                clubTextField,
+                prioTextField,
+                dateOfBirthPicker,
+                licenseNumberTextField,
+                submitButton, cancelButton
+        );
+        layout.setStyle("-fx-padding: 20;");
+        layout.setBackground(new Background(new BackgroundFill(Color.web("#161618"), CornerRadii.EMPTY, Insets.EMPTY)));
+
+        Scene scene = new Scene(layout);
+        scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/assets/style/datePickerStyle.css")).toExternalForm());
+
+        Stage formStage = new Stage();
+        formStage.setTitle("Neuer Eintrag");
+        formStage.setScene(scene);
+        formStage.initOwner(parentStage);                // Setzt Hauptfenster als Owner
+        formStage.initModality(Modality.WINDOW_MODAL);   // Blockiert nur das Hauptfenster
+        formStage.setResizable(false);
+        formStage.show();
+    }
+
+    public TextField getSimpleTextField() {
+        TextField textField = new TextField();
+        textField.setPrefWidth(width / 6);
+        textField.setPrefHeight(height / 40);
+        textField.setFont(Resource.getFont("/anta_regular.otf", (int) (height / 40)));
+        textField.setStyle(
+                "-fx-background-radius: 10;" +     // abgerundete Ecken
+                "-fx-border-radius: 10;" +         // abgerundeter Rahmen
+                "-fx-border-color: #818181;" +     // Farbe des Rahmens
+                "-fx-text-fill: #ffffff;" +     // Farbe des Rahmens
+                "-fx-background-color: #212124;" +
+                "-fx-border-width: 2;"             // Dicke des Rahmens
+        );
+
+        return textField;
     }
 
     public Image getCurrentWeatherSymbol() {
@@ -389,7 +549,7 @@ public class GUI extends Application {
     public Label getInfoLabel(String text) {
         Label label = new Label();
         label.setTextFill(Color.WHITE);
-        label.setFont(Resource.getFont("/anta_regular.otf", (int) (height / 20))); // beliebig anpassen
+        label.setFont(Resource.getFont("/anta_regular.otf", (int) (height / 20)));
         label.setEffect(new DropShadow(width / 200, 0, 0, Color.web("#000000", 0.20)));
         label.setAlignment(Pos.CENTER);
         label.setText(text);

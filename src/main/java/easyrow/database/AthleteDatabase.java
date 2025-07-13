@@ -29,7 +29,7 @@ public class AthleteDatabase extends Database{
                         club TEXT,
                         prio INT,
                         birthdate STRING,
-                        licenseNumber BIGINT
+                        licenseNumber LONG
                     );
                     """;
             statement.execute(athletesCreate);
@@ -58,7 +58,7 @@ public class AthleteDatabase extends Database{
             preparedStatement.setString(3, athlete.getClub().name());
             preparedStatement.setInt(4, athlete.getPrio());
             preparedStatement.setString(5, athlete.getDateOfBirth().toString());
-            preparedStatement.setInt(6, athlete.getLicenseNumber());
+            preparedStatement.setLong(6, athlete.getLicenseNumber());
 
             preparedStatement.executeUpdate();
 
@@ -82,7 +82,7 @@ public class AthleteDatabase extends Database{
                 String clubString = resultSet.getString("club");
                 int prioInt = resultSet.getInt("prio");
                 LocalDate localDate =  LocalDate.parse(resultSet.getString("birthdate"));
-                int licenseNumber = resultSet.getInt("licenseNumber");
+                long licenseNumber = resultSet.getLong("licenseNumber");
 
                 Club club = Club.valueOf(clubString);
 

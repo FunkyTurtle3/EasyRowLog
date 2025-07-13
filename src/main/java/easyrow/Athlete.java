@@ -12,9 +12,9 @@ public class Athlete {
     private final Club club;
     private final int prio;
     private final LocalDate dateOfBirth;
-    private final int licenseNumber;
+    private final long licenseNumber;
 
-    public Athlete(String firstName, String lastName, Club club, Prio prio, LocalDate dateOfBirth, int licenseNumber) {
+    public Athlete(String firstName, String lastName, Club club, Prio prio, LocalDate dateOfBirth, long licenseNumber) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.club = club;
@@ -43,7 +43,7 @@ public class Athlete {
         return club;
     }
 
-    public int getLicenseNumber() {
+    public long getLicenseNumber() {
         return licenseNumber;
     }
 

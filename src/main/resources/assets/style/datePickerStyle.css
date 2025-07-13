@@ -1,0 +1,89 @@
+/* === Dark Theme für DatePicker === */
+
+.date-picker {
+    -fx-background-color: #212124;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-color: #818181;
+    -fx-border-width: 2;
+}
+
+.date-picker .text-field {
+    -fx-background-color: #212124;
+    -fx-text-fill: white;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+}
+
+/* Kalenderzellen */
+.date-picker .cell {
+    -fx-background-color: #212124;
+    -fx-border-color: #818181;
+    -fx-text-fill: #ffffff;
+}
+
+/* Aktuelles Datum */
+.date-picker .today {
+    -fx-border-color: #818181;
+}
+
+/* Ausgewählter Tag */
+.date-picker .selected {
+    -fx-background-color: #818181;
+    -fx-text-fill: white;
+}
+
+/* Hover */
+.date-picker .cell:hover {
+    -fx-background-color: #333333;
+}
+
+/* Monat/Jahr Titel */
+.date-picker .label {
+    -fx-text-fill: #ffffff;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+}
+
+/* Popup */
+.date-picker-popup {
+    -fx-background-color: #212124;
+    -fx-border-color: #818181;
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+}
+
+/* Container der Header-Zeile */
+.date-picker .month-year-pane {
+    -fx-background-color: #2a2a2a;
+    -fx-padding: 5 10 5 10;
+}
+
+/* Monat- und Jahreslabel */
+.date-picker .month-year-pane .label {
+    -fx-text-fill: #ffffff;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+}
+
+/* Navigationspfeile (Buttons) */
+.date-picker .month-year-pane .button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #ffffff;
+}
+
+/* Hover-Effekt für Navigationspfeile */
+.date-picker .month-year-pane .button:hover {
+    -fx-background-color: #444444;
+}
+
+.date-picker .arrow-button {
+    -fx-background-color: transparent;  /* Hintergrund transparent */
+    -fx-padding: 5;                      /* Innenabstand */
+}
+
+
+/* Icon Farbe anpassen (Standard ist ein Pfeil) */
+.date-picker .arrow-button .arrow {
+    -fx-background-color: #ffffff;
+}

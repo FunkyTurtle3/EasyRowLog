@@ -1,5 +1,7 @@
 package easyrow.config;
 
+import javafx.scene.paint.Color;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -46,4 +48,5 @@ public class ConfigManager {
             e.printStackTrace();
         }
     }
+
 }

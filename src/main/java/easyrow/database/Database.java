@@ -9,6 +9,10 @@ public abstract class Database {
 
     protected final String URL = "jdbc:sqlite:" + getName() + ".db";
 
+    protected Database() {
+        init();
+    }
+
     public abstract void init();
 
     public String getURL() {

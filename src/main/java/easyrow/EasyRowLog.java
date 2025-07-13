@@ -75,6 +75,7 @@ public class EasyRowLog {
 
     public void saveAthlete(Athlete athlete) {
         athleteDatabase.saveAthlete(athlete);
+        System.out.println("funktioniert!");
     }
 
     public void clearDatabase() {
