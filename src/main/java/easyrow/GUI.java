@@ -143,8 +143,6 @@ public class GUI extends Application {
             fogSky.setOpacity(1);
         }
 
-
-
         Circle sunDisplay = new Circle(width / 20);
         sunDisplay.setFill(new RadialGradient(0, 0, 0.5, 0.5, 1,  true,
                 CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("#FFF0D7")), new Stop(1, Color.web("#FFDB72")))));
@@ -156,7 +154,7 @@ public class GUI extends Application {
 
         Label timeLabel = getInfoLabel(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")));
 
-        StackPane timePane = new StackPane(getInfoRectangle(), getIconBox("/UI/time_symbol.png", 0), timeLabel);
+        StackPane timePane = new StackPane(getInfoRectangle(), timeLabel);
         timePane.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
 
         Label tempLabel = getInfoLabel(getTemperature("Berlin"));
@@ -168,7 +166,7 @@ public class GUI extends Application {
         Circle offCircle = getInfoCircle(true);
         offCircle.setOnMouseClicked(MouseEvent -> System.exit(0));
 
-        StackPane tempPane = new StackPane(getInfoRectangle(), getIconBox("/UI/temp_symbol.png", 0), tempLabel);
+        StackPane tempPane = new StackPane(getInfoRectangle(), tempLabel);
         tempPane.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
         tempPane.setAlignment(Pos.CENTER);
 
@@ -216,21 +214,6 @@ public class GUI extends Application {
         wavesImageView.setOpacity(0);
         wavesImageView.setY(height - waveImg.getHeight() / 2);
         wavesImageView.setEffect(new DropShadow(width / 200, Color.WHITE));
-
-        Image leftSweep = Resource.getTexture("/oars/sweep_left.png");
-        ImageView sweepLeftImgView = new ImageView(leftSweep);
-        sweepLeftImgView.setPreserveRatio(true);
-        sweepLeftImgView.setFitHeight(height * 1.03);
-        sweepLeftImgView.setX(-1 * height / 18);
-        sweepLeftImgView.setY(height * -0.03);
-
-        Image rightSweep = Resource.getTexture("/oars/sweep_left.png");
-        ImageView sweepRightImgView = new ImageView(rightSweep);
-        sweepRightImgView.setScaleX(-1);
-        sweepRightImgView.setPreserveRatio(true);
-        sweepRightImgView.setFitHeight(height * 1.03);
-        sweepRightImgView.setTranslateX(width / 2 - (rightSweep.getWidth() - height / 18) / 2 + 1);
-        sweepRightImgView.setY(height * -0.03);
 
         // --- Right Panel ---
         StackPane rightPanel = new StackPane();
@@ -387,7 +370,12 @@ public class GUI extends Application {
             try {
                 easyRowLog.saveAthlete(new Athlete(firstNameTextField.getText(), lastNameTextField.getText(), Club.valueOf(clubTextField.getText().toUpperCase()), Prio.getPrioByInt(Integer.parseInt(prioTextField.getText())), dateOfBirthPicker.getValue(), 0));
             } catch (Exception exception) {
-                exception.printStackTrace();
+                submitButton.setStyle("-fx-background-radius: " + width / 100 + ";" +
+                        "-fx-border-radius: " + width / 100 + ";" +
+                        "-fx-border-color: rgba(255, 0, 0, 0.5);" +
+                        "-fx-text-fill: #ffffff;" +
+                        "-fx-background-color: rgba(255, 0, 0, 0.2);" +
+                        "-fx-border-width: 2;");
             }
         });
         submitButton.setPrefWidth(width / 12 - width / 48);
@@ -401,6 +389,18 @@ public class GUI extends Application {
                         "-fx-background-color: rgba(255, 255, 255, 0.2);" +
                         "-fx-border-width: 2;"
         );
+        submitButton.setOnMousePressed(mouseEvent -> {
+            ScaleTransition animation = new ScaleTransition(Duration.millis(200), submitButton);
+            animation.setToX(0.9);
+            animation.setToY(0.9);
+            animation.play();
+        });
+        submitButton.setOnMouseReleased(mouseEvent -> {
+            ScaleTransition animation = new ScaleTransition(Duration.millis(200), submitButton);
+            animation.setToX(1);
+            animation.setToY(1);
+            animation.play();
+        });
 
         Button cancelButton = new Button();
         ImageView cancelImgView = getSimpleIconImgView("/UI/add_symbol.png");
@@ -420,6 +420,19 @@ public class GUI extends Application {
                         "-fx-background-color: rgba(255, 255, 255, 0.2);" +
                         "-fx-border-width: 2;"
         );
+        cancelButton.setOnMousePressed(mouseEvent -> {
+            ScaleTransition animation = new ScaleTransition(Duration.millis(200), cancelButton);
+            animation.setToX(0.9);
+            animation.setToY(0.9);
+            animation.play();
+        });
+        cancelButton.setOnMouseReleased(mouseEvent -> {
+            ScaleTransition animation = new ScaleTransition(Duration.millis(200), cancelButton);
+            animation.setToX(1);
+            animation.setToY(1);
+            animation.play();
+        });
+
         VBox layout = new VBox(10,
                 firstNameTextField,
                 lastNameTextField,
