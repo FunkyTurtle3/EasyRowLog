@@ -31,7 +31,6 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -51,10 +50,10 @@ public class GUI extends Application {
     private Label descriptionLabel;
     private double width;
     private double height;
-    private RadialGradient clearSkyGradient = new RadialGradient(0, 0, 0.5, 1, 1,  true, CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("C7FFF4")), new Stop(1, Color.web("0096C7"))));
-    private RadialGradient sunsetSunriseGradient = new RadialGradient(0, 0, 0.5, 1, 1, true, CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("FCBF49")), new Stop(1, Color.web("D62828"))));
-    private RadialGradient nightSkyGradient = new RadialGradient(0, 0, 0.5, 1, 1, true, CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("03045E")), new Stop(1, Color.web("0D1B2A"))));
-    private RadialGradient fogSkyGradient = new RadialGradient(0, 0, 0.5, 1, 1, true, CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("FFFFFF")), new Stop(1, Color.web("7F7F7F"))));
+    private static final RadialGradient clearSkyGradient = new RadialGradient(0, 0, 0.5, 1, 1,  true, CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("C7FFF4")), new Stop(1, Color.web("0096C7"))));
+    private static final RadialGradient sunsetSunriseGradient = new RadialGradient(0, 0, 0.5, 1, 1, true, CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("FCBF49")), new Stop(1, Color.web("D62828"))));
+    private static final RadialGradient nightSkyGradient = new RadialGradient(0, 0, 0.5, 1, 1, true, CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("03045E")), new Stop(1, Color.web("0D1B2A"))));
+    private static final RadialGradient fogSkyGradient = new RadialGradient(0, 0, 0.5, 1, 1, true, CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("FFFFFF")), new Stop(1, Color.web("7F7F7F"))));
 
 
 
@@ -391,7 +390,7 @@ public class GUI extends Application {
                 exception.printStackTrace();
             }
         });
-        submitButton.setPrefWidth(width / 12);
+        submitButton.setPrefWidth(width / 12 - width / 48);
         submitButton.setPrefHeight(height / 40);
         submitButton.setFont(Resource.getFont("/anta_regular.otf", (int) (height / 40)));
         submitButton.setStyle(
@@ -410,7 +409,7 @@ public class GUI extends Application {
         cancelButton.setOnAction(e -> {
             ((Stage) cancelButton.getScene().getWindow()).close();
         });
-        cancelButton.setPrefWidth(width / 12);
+        cancelButton.setPrefWidth(width / 12 - width / 48);
         cancelButton.setPrefHeight(height / 40);
         cancelButton.setFont(Resource.getFont("/anta_regular.otf", (int) (height / 40)));
         cancelButton.setStyle(
@@ -421,15 +420,13 @@ public class GUI extends Application {
                         "-fx-background-color: rgba(255, 255, 255, 0.2);" +
                         "-fx-border-width: 2;"
         );
-        System.out.println(firstNameTextField.getBoundsInLocal().getWidth());
-        System.out.println(submitButton.getBoundsInLocal().getWidth());
         VBox layout = new VBox(10,
                 firstNameTextField,
                 lastNameTextField,
                 clubTextField,
                 prioTextField,
                 dateOfBirthPicker,
-                new HBox(submitButton, cancelButton)
+                new HBox(width / 24, submitButton, cancelButton)
         );
         layout.setStyle("-fx-padding: 20;");
         layout.setBackground(new Background(new BackgroundFill(clearSkyGradient, CornerRadii.EMPTY, Insets.EMPTY)));
@@ -460,7 +457,6 @@ public class GUI extends Application {
                         "-fx-prompt-text-fill: #eeeeee;" +
                         "-fx-border-width: 2;"
         );
-
         return textField;
     }
 
@@ -644,7 +640,7 @@ public class GUI extends Application {
         return getIconBox(getSimpleIconImgView(path), face);
     }
 
-    public Stop[] getStops(Stop... stops) {
+    public static Stop[] getStops(Stop... stops) {
         return stops;
     }
 
