@@ -51,6 +51,12 @@ public class GUI extends Application {
     private Label descriptionLabel;
     private double width;
     private double height;
+    private RadialGradient clearSkyGradient = new RadialGradient(0, 0, 0.5, 1, 1,  true, CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("C7FFF4")), new Stop(1, Color.web("0096C7"))));
+    private RadialGradient sunsetSunriseGradient = new RadialGradient(0, 0, 0.5, 1, 1, true, CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("FCBF49")), new Stop(1, Color.web("D62828"))));
+    private RadialGradient nightSkyGradient = new RadialGradient(0, 0, 0.5, 1, 1, true, CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("03045E")), new Stop(1, Color.web("0D1B2A"))));
+    private RadialGradient fogSkyGradient = new RadialGradient(0, 0, 0.5, 1, 1, true, CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("FFFFFF")), new Stop(1, Color.web("7F7F7F"))));
+
+
 
     public static void main(String[] args) {
         launch(args);
@@ -112,12 +118,6 @@ public class GUI extends Application {
         // --- Center Panel ---
         Pane centerPane = new Pane();
         centerPane.setPrefWidth(width / 2);
-
-        RadialGradient clearSkyGradient = new RadialGradient(0, 0, 0.5, 1, 1,  true, CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("C7FFF4")), new Stop(1, Color.web("0096C7"))));
-        RadialGradient sunsetSunriseGradient = new RadialGradient(0, 0, 0.5, 1, 1, true, CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("FCBF49")), new Stop(1, Color.web("D62828"))));
-        RadialGradient nightSkyGradient = new RadialGradient(0, 0, 0.5, 1, 1, true, CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("03045E")), new Stop(1, Color.web("0D1B2A"))));
-        RadialGradient fogSkyGradient = new RadialGradient(0, 0, 0.5, 1, 1, true, CycleMethod.NO_CYCLE, getStops(new Stop(0, Color.web("FFFFFF")), new Stop(1, Color.web("7F7F7F"))));
-
 
         Rectangle clearSky = new Rectangle(width, height);
         clearSky.setFill(clearSkyGradient);
@@ -353,22 +353,24 @@ public class GUI extends Application {
 
         DatePicker dateOfBirthPicker = new DatePicker();
 
-        dateOfBirthPicker.getEditor().setPrefWidth(width / 6);
         dateOfBirthPicker.getEditor().setPrefHeight(height / 20);
         dateOfBirthPicker.getEditor().setFont(Resource.getFont("/anta_regular.otf", (int) (height / 40)));
         dateOfBirthPicker.setStyle(
-                "-fx-background-color: #212124;" +
-                        "-fx-background-radius: 10;" +
-                        "-fx-border-radius: 10;" +
-                        "-fx-border-color: #818181;" +
+                "-fx-background-radius: " + width / 100 + ";" +
+                        "-fx-border-radius: " + width / 100 + ";" +
+                        "-fx-border-color: rgba(255, 255, 255, 0.5);" +
+                        "-fx-text-fill: #ffffff;" +
+                        "-fx-background-color: rgba(255, 255, 255, 0.2);" +
                         "-fx-border-width: 2;"
         );
         dateOfBirthPicker.getEditor().setStyle(
-                "-fx-background-color: #212124;" +
+                "-fx-background-radius: " + width / 100 + ";" +
+                        "-fx-border-radius: " + width / 100 + ";" +
                         "-fx-text-fill: #ffffff;" +
-                        "-fx-background-radius: 10;" +
-                        "-fx-border-radius: 10;"
+                        "-fx-background-color: rgba(255, 255, 255, 0);" +
+                        "-fx-border-width: 0;"
         );
+        /**
         TextField licenseNumberTextField = getSimpleTextField();
         licenseNumberTextField.setPromptText("License Number (optional)");
         licenseNumberTextField.setTextFormatter(new TextFormatter<>(change -> {
@@ -378,12 +380,13 @@ public class GUI extends Application {
             }
             return null;
         }));
+         */
 
         Button submitButton = new Button();
         submitButton.setGraphic(getSimpleIconImgView("/UI/save_symbol.png"));
         submitButton.setOnAction(e -> {
             try {
-                easyRowLog.saveAthlete(new Athlete(firstNameTextField.getText(), lastNameTextField.getText(), Club.valueOf(clubTextField.getText().toUpperCase()), Prio.getPrioByInt(Integer.parseInt(prioTextField.getText())), dateOfBirthPicker.getValue(), Long.parseLong(licenseNumberTextField.getText())));
+                easyRowLog.saveAthlete(new Athlete(firstNameTextField.getText(), lastNameTextField.getText(), Club.valueOf(clubTextField.getText().toUpperCase()), Prio.getPrioByInt(Integer.parseInt(prioTextField.getText())), dateOfBirthPicker.getValue(), 0));
             } catch (Exception exception) {
                 exception.printStackTrace();
             }
@@ -392,12 +395,12 @@ public class GUI extends Application {
         submitButton.setPrefHeight(height / 40);
         submitButton.setFont(Resource.getFont("/anta_regular.otf", (int) (height / 40)));
         submitButton.setStyle(
-                "-fx-background-radius: 10;" +     // abgerundete Ecken
-                        "-fx-border-radius: 10;" +         // abgerundeter Rahmen
-                        "-fx-border-color: #818181;" +     // Farbe des Rahmens
-                        "-fx-text-fill: #ffffff;" +     // Farbe des Rahmens
-                        "-fx-background-color: #212124;" +
-                        "-fx-border-width: 2;"             // Dicke des Rahmens
+                "-fx-background-radius: " + width / 100 + ";" +
+                        "-fx-border-radius: " + width / 100 + ";" +
+                        "-fx-border-color: rgba(255, 255, 255, 0.5);" +
+                        "-fx-text-fill: #ffffff;" +
+                        "-fx-background-color: rgba(255, 255, 255, 0.2);" +
+                        "-fx-border-width: 2;"
         );
 
         Button cancelButton = new Button();
@@ -411,25 +414,25 @@ public class GUI extends Application {
         cancelButton.setPrefHeight(height / 40);
         cancelButton.setFont(Resource.getFont("/anta_regular.otf", (int) (height / 40)));
         cancelButton.setStyle(
-                "-fx-background-radius: 10;" +     // abgerundete Ecken
-                        "-fx-border-radius: 10;" +         // abgerundeter Rahmen
-                        "-fx-border-color: #818181;" +     // Farbe des Rahmens
-                        "-fx-text-fill: #ffffff;" +     // Farbe des Rahmens
-                        "-fx-background-color: #212124;" +
-                        "-fx-border-width: 2;"             // Dicke des Rahmens
+                "-fx-background-radius: " + width / 100 + ";" +
+                        "-fx-border-radius: " + width / 100 + ";" +
+                        "-fx-border-color: rgba(255, 255, 255, 0.5);" +
+                        "-fx-text-fill: #ffffff;" +
+                        "-fx-background-color: rgba(255, 255, 255, 0.2);" +
+                        "-fx-border-width: 2;"
         );
+        System.out.println(firstNameTextField.getBoundsInLocal().getWidth());
+        System.out.println(submitButton.getBoundsInLocal().getWidth());
         VBox layout = new VBox(10,
-                new Label("Bitte Daten eingeben:"),
                 firstNameTextField,
                 lastNameTextField,
                 clubTextField,
                 prioTextField,
                 dateOfBirthPicker,
-                licenseNumberTextField,
-                submitButton, cancelButton
+                new HBox(submitButton, cancelButton)
         );
         layout.setStyle("-fx-padding: 20;");
-        layout.setBackground(new Background(new BackgroundFill(Color.web("#161618"), CornerRadii.EMPTY, Insets.EMPTY)));
+        layout.setBackground(new Background(new BackgroundFill(clearSkyGradient, CornerRadii.EMPTY, Insets.EMPTY)));
 
         Scene scene = new Scene(layout);
         scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/assets/style/datePickerStyle.css")).toExternalForm());
@@ -449,12 +452,13 @@ public class GUI extends Application {
         textField.setPrefHeight(height / 40);
         textField.setFont(Resource.getFont("/anta_regular.otf", (int) (height / 40)));
         textField.setStyle(
-                "-fx-background-radius: 10;" +     // abgerundete Ecken
-                "-fx-border-radius: 10;" +         // abgerundeter Rahmen
-                "-fx-border-color: #818181;" +     // Farbe des Rahmens
-                "-fx-text-fill: #ffffff;" +     // Farbe des Rahmens
-                "-fx-background-color: #212124;" +
-                "-fx-border-width: 2;"             // Dicke des Rahmens
+                "-fx-background-radius: " + width / 100 + ";" +
+                        "-fx-border-radius: " + width / 100 + ";" +
+                        "-fx-border-color: rgba(255, 255, 255, 0.5);" +
+                        "-fx-text-fill: #ffffff;" +
+                        "-fx-background-color: rgba(255, 255, 255, 0.2);" +
+                        "-fx-prompt-text-fill: #eeeeee;" +
+                        "-fx-border-width: 2;"
         );
 
         return textField;
